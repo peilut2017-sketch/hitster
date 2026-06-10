@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A0D18">
+<title>ניגון בזמן · משחק ציר הזמן של המוזיקה החסידית</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0D18;
+  --bg2:#0E1322;
+  --raised:#151B30;
+  --raised2:#1B2240;
+  --line:rgba(217,180,90,.16);
+  --gold:#D9B45A;
+  --gold-bright:#F2D284;
+  --gold-dim:rgba(217,180,90,.55);
+  --ink:#F4EFE2;
+  --muted:#8B90A6;
+  --red:#C75A50;
+  --green:#7FB069;
+  --r:16px;
+  --disp:'Frank Ruhl Libre',serif;
+  --body:'Heebo',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  background:var(--bg);
+  background-image:radial-gradient(1200px 600px at 50% -10%, rgba(217,180,90,.06), transparent 60%);
+  color:var(--ink);
+  font-family:var(--body);
+  font-weight:400;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:var(--body);cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:var(--body);color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:15px;width:100%}
+input:focus,select:focus{outline:2px solid var(--gold-dim);outline-offset:1px;border-color:transparent}
+::placeholder{color:#5A5F73}
+
+/* ---------- screens ---------- */
+.screen{display:none;min-height:100dvh;flex-direction:column}
+.screen.active{display:flex}
+.wrap{width:100%;max-width:560px;margin:0 auto;padding:0 18px;flex:1;display:flex;flex-direction:column}
+
+/* ---------- shared ---------- */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  width:100%;padding:15px;border-radius:14px;font-size:17px;font-weight:700;
+  background:linear-gradient(180deg,var(--gold-bright),var(--gold));
+  color:#241B05;transition:transform .12s ease, box-shadow .12s ease;
+  box-shadow:0 4px 18px rgba(217,180,90,.22);
+}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:var(--raised);color:var(--ink);border:1px solid var(--line);box-shadow:none}
+.btn.small{width:auto;padding:9px 16px;font-size:14px;border-radius:10px}
+.btn.danger{background:var(--raised);color:var(--red);border:1px solid rgba(199,90,80,.35);box-shadow:none}
+.btn:disabled{opacity:.4;pointer-events:none}
+.eyebrow{font-size:12px;letter-spacing:.18em;color:var(--gold-dim);font-weight:700}
+.card-panel{background:var(--raised);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.row{display:flex;gap:10px;align-items:center}
+.spacer{flex:1}
+.muted{color:var(--muted)}
+.center{text-align:center}
+
+/* ---------- home ---------- */
+#scrHome .wrap{justify-content:center;align-items:center;text-align:center;gap:0;padding-top:48px;padding-bottom:32px}
+.logo-vinyl{width:130px;height:130px;margin-bottom:26px}
+h1.logo{
+  font-family:var(--disp);font-weight:900;font-size:52px;line-height:1.05;
+  background:linear-gradient(180deg,var(--gold-bright) 20%,var(--gold) 80%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.tagline{color:var(--muted);font-size:16px;margin:10px 0 40px;font-weight:300}
+.home-actions{width:100%;display:flex;flex-direction:column;gap:12px}
+.admin-link{margin-top:34px;color:#4A4F63;font-size:13px;padding:8px}
+
+/* ---------- setup ---------- */
+.topbar{display:flex;align-items:center;gap:10px;padding:16px 0 8px}
+.topbar h2{font-family:var(--disp);font-size:24px;font-weight:700;flex:1}
+.back{font-size:22px;color:var(--muted);padding:6px 10px}
+.field{margin:14px 0}
+.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:7px;font-weight:500}
+.seg{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;padding:10px 6px;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--raised2);color:var(--gold-bright)}
+.player-inputs{display:flex;flex-direction:column;gap:8px}
+.player-inputs .row input{flex:1}
+.del-player{color:var(--red);font-size:18px;padding:8px}
+.add-player{align-self:flex-start;color:var(--gold);font-weight:600;font-size:14px;padding:8px 4px}
+#setupStart{margin:22px 0 30px}
+
+/* ---------- game ---------- */
+#scrGame .wrap{padding-bottom:0;max-width:640px}
+.players-bar{display:flex;gap:8px;padding:14px 0 6px;overflow-x:auto;scrollbar-width:none}
+.players-bar::-webkit-scrollbar{display:none}
+.pchip{
+  display:flex;align-items:center;gap:7px;flex-shrink:0;
+  background:var(--raised);border:1px solid var(--line);border-radius:999px;
+  padding:7px 13px;font-size:13px;color:var(--muted);transition:all .25s;
+}
+.pchip.turn{background:var(--raised2);color:var(--ink);border-color:var(--gold-dim);box-shadow:0 0 14px rgba(217,180,90,.15)}
+.pchip .cnt{font-family:var(--disp);font-weight:700;color:var(--gold);font-size:14px}
+.pchip .tok{font-size:11px;color:var(--gold-dim)}
+
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:8px 0 4px;min-height:300px}
+.turn-label{font-size:14px;color:var(--muted)}
+.turn-label b{color:var(--gold-bright);font-weight:700}
+
+/* --- the vinyl: signature element --- */
+.vinyl-wrap{position:relative;width:min(240px,58vw);aspect-ratio:1}
+.progress-ring{position:absolute;inset:-9px;border-radius:50%;
+  background:conic-gradient(var(--gold) calc(var(--p,0)*1%), rgba(217,180,90,.12) 0);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));
+  transition:background .2s linear}
+.vinyl{position:absolute;inset:0;border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 50%, #1A1A1F 0 17%, transparent 17%),
+    repeating-radial-gradient(circle at 50% 50%, #131318 0 2.2%, #1B1B22 2.2% 3.1%),
+    #131318;
+  box-shadow:0 14px 44px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,255,255,.05);
+  display:flex;align-items:center;justify-content:center;
+}
+.vinyl.spin{animation:spin 2.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.vinyl-label{width:34%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, var(--gold-bright), var(--gold) 60%, #9A7A2E);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--disp);font-weight:900;color:#241B05;font-size:30px;
+  box-shadow:inset 0 0 0 2px rgba(0,0,0,.18)}
+.vinyl-q{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:var(--disp);font-weight:900;font-size:64px;color:rgba(244,239,226,.1);pointer-events:none}
+.vinyl-wrap.grabbable{cursor:grab;touch-action:none}
+.vinyl-wrap.grabbable::after{content:'גררו לציר ↓';position:absolute;bottom:-26px;left:0;right:0;text-align:center;
+  font-size:12px;color:var(--gold-dim);font-weight:600;animation:breathe 1.8s ease-in-out infinite}
+.vinyl-wrap.dragging{z-index:80;cursor:grabbing}
+.vinyl-wrap.dragging::after{display:none}
+.vinyl-wrap.dragging .vinyl{box-shadow:0 22px 60px rgba(0,0,0,.7),0 0 0 3px var(--gold-dim)}
+.slot.hot{opacity:1;background:rgba(217,180,90,.22);border-color:var(--gold);transform:scale(1.18)}
+
+.eq{display:flex;gap:4px;align-items:flex-end;height:26px}
+.eq i{width:4px;border-radius:3px;background:var(--gold);height:6px;opacity:.85}
+.eq.live i{animation:eq .55s ease-in-out infinite alternate}
+.eq i:nth-child(1){animation-delay:0s}.eq i:nth-child(2){animation-delay:.12s}
+.eq i:nth-child(3){animation-delay:.24s}.eq i:nth-child(4){animation-delay:.06s}
+.eq i:nth-child(5){animation-delay:.3s}.eq i:nth-child(6){animation-delay:.18s}
+.eq i:nth-child(7){animation-delay:.09s}
+@keyframes eq{from{height:5px}to{height:24px}}
+.eq:not(.live) i{height:5px;opacity:.25}
+
+.play-controls{display:flex;gap:10px;align-items:center;justify-content:center;min-height:54px}
+.btn-play{width:auto;padding:13px 30px;border-radius:999px;font-size:16px}
+.demo-note{font-size:12.5px;color:var(--muted);text-align:center;max-width:280px}
+
+/* --- timeline --- */
+.tl-zone{background:linear-gradient(180deg,transparent,rgba(14,19,34,.9) 22%);padding:10px 0 14px;border-top:1px solid var(--line)}
+.tl-head{display:flex;align-items:baseline;gap:8px;padding:0 18px 8px;max-width:640px;margin:0 auto}
+.tl-head .eyebrow{font-size:11px}
+.tl-hint{font-size:12.5px;color:var(--muted)}
+.timeline{display:flex;align-items:center;gap:8px;overflow-x:auto;padding:6px 18px 10px;scrollbar-width:none}
+.timeline::-webkit-scrollbar{display:none}
+.tcard{flex-shrink:0;width:86px;border-radius:12px;background:var(--raised2);
+  border:1px solid var(--line);padding:9px 8px;text-align:center;
+  display:flex;flex-direction:column;gap:3px;animation:pop .35s ease}
+.tcard .yr{font-family:var(--disp);font-weight:900;font-size:23px;color:var(--gold-bright);line-height:1}
+.tcard .tt{font-size:10.5px;color:var(--muted);line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+.slot{flex-shrink:0;width:38px;height:64px;border-radius:11px;border:1.5px dashed rgba(217,180,90,.28);
+  display:flex;align-items:center;justify-content:center;color:var(--gold-dim);font-size:20px;
+  transition:all .2s;opacity:.35;pointer-events:none}
+.slot.armed{opacity:1;pointer-events:auto;animation:breathe 1.6s ease-in-out infinite}
+.slot.armed:active{background:rgba(217,180,90,.15);transform:scale(1.06)}
+@keyframes breathe{0%,100%{border-color:rgba(217,180,90,.25);box-shadow:none}50%{border-color:var(--gold);box-shadow:0 0 12px rgba(217,180,90,.22)}}
+
+/* --- reveal overlay --- */
+.overlay{position:fixed;inset:0;background:rgba(6,8,16,.86);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;z-index:50;padding:22px}
+.overlay.show{display:flex}
+.flip-scene{perspective:1100px;width:min(290px,80vw)}
+.flip-card{position:relative;width:100%;aspect-ratio:3/4;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.3,1.2,.35,1)}
+.flip-card.flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:20px;backface-visibility:hidden;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:22px;text-align:center}
+.face.front{background:radial-gradient(circle at 50% 38%, var(--raised2), var(--raised));
+  border:1px solid var(--line);font-family:var(--disp);font-size:84px;font-weight:900;color:rgba(217,180,90,.4)}
+.face.back{background:linear-gradient(165deg,#1E2542,var(--raised));border:1px solid var(--gold-dim);transform:rotateY(180deg)}
+.face.back .ryear{font-family:var(--disp);font-weight:900;font-size:62px;line-height:1;color:var(--gold-bright)}
+.face.back .rtitle{font-size:19px;font-weight:700;margin-top:6px}
+.face.back .rartist{font-size:14.5px;color:var(--muted)}
+.verdict{margin-top:14px;font-size:21px;font-weight:800;opacity:0;transition:opacity .3s}
+.verdict.show{opacity:1}
+.verdict.ok{color:var(--gold-bright)}
+.verdict.bad{color:var(--red)}
+.overlay .btn{max-width:290px;margin-top:18px}
+.bonus-q{margin-top:14px;display:none;flex-direction:column;gap:10px;align-items:center}
+.bonus-q.show{display:flex}
+.bonus-q p{font-size:14px;color:var(--muted)}
+.bonus-q .row{width:min(290px,80vw)}
+
+.slot.taken{border-style:solid;border-color:var(--red);color:var(--red);opacity:1;pointer-events:none;animation:none}
+.challenge-bar{height:4px;border-radius:99px;background:rgba(217,180,90,.18);overflow:hidden;width:min(290px,80vw);margin-top:14px}
+.challenge-bar i{display:block;height:100%;background:var(--gold);width:100%;transition:width .1s linear}
+.challenge-btns{display:flex;flex-direction:column;gap:8px;width:min(290px,80vw);margin-top:14px}
+
+/* confetti */
+.confetti{position:fixed;top:-10px;width:9px;height:14px;z-index:60;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.2}}
+
+/* --- win --- */
+#scrWin .wrap{justify-content:center;align-items:center;text-align:center;gap:14px}
+.win-crown{font-size:54px}
+#winName{font-family:var(--disp);font-weight:900;font-size:42px;color:var(--gold-bright)}
+
+/* ---------- admin ---------- */
+#scrAdmin .wrap{max-width:760px;padding-bottom:40px}
+.admin-tools{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.stat-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 14px}
+.stat-cards .card-panel{padding:12px;text-align:center}
+.stat-cards .num{font-family:var(--disp);font-weight:900;font-size:26px;color:var(--gold-bright)}
+.stat-cards .lbl{font-size:11.5px;color:var(--muted)}
+.decades{display:flex;align-items:flex-end;gap:6px;height:74px;margin:4px 0 16px;padding:0 4px}
+.decades .bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end;height:100%}
+.decades .bar i{width:100%;background:linear-gradient(180deg,var(--gold),#8F742F);border-radius:4px 4px 0 0;min-height:3px}
+.decades .bar span{font-size:10px;color:var(--muted)}
+.song-list{display:flex;flex-direction:column;gap:8px}
+.song-row{display:flex;align-items:center;gap:10px;background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.song-row .syr{font-family:var(--disp);font-weight:900;font-size:19px;color:var(--gold);min-width:48px;text-align:center}
+.song-row .smain{flex:1;min-width:0}
+.song-row .st{font-size:14.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-row .sa{font-size:12px;color:var(--muted)}
+.song-row .badges{display:flex;gap:5px;align-items:center;flex-shrink:0}
+.badge{font-size:10.5px;padding:3px 7px;border-radius:6px;background:var(--bg2);border:1px solid var(--line);color:var(--muted)}
+.badge.warn{color:#E0A33C;border-color:rgba(224,163,60,.4)}
+.badge.good{color:var(--green);border-color:rgba(127,176,105,.35)}
+.badge.bad{color:var(--red);border-color:rgba(199,90,80,.35)}
+.song-row.off{opacity:.45}
+
+/* admin modal */
+.modal{position:fixed;inset:0;background:rgba(6,8,16,.8);display:none;z-index:70;overflow-y:auto;padding:20px 14px}
+.modal.show{display:block}
+.modal-box{max-width:560px;margin:0 auto;background:var(--raised);border:1px solid var(--line);border-radius:18px;padding:20px}
+.modal-box h3{font-family:var(--disp);font-size:21px;margin-bottom:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.yt-frame{width:100%;aspect-ratio:16/9;border-radius:12px;border:1px solid var(--line);background:#000;margin:8px 0}
+.calib{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 2px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--raised2);
+  border:1px solid var(--gold-dim);color:var(--ink);padding:11px 20px;border-radius:999px;font-size:14px;
+  z-index:90;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+
+@media (prefers-reduced-motion:reduce){
+  .vinyl.spin,.eq.live i,.slot.armed{animation:none}
+  .flip-card{transition:transform .2s}
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HOME ============ -->
+<div class="screen active" id="scrHome">
+  <div class="wrap">
+    <svg class="logo-vinyl" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="48" fill="#131318"/>
+      <circle cx="50" cy="50" r="44" fill="none" stroke="#1F1F26" stroke-width="1.4"/>
+      <circle cx="50" cy="50" r="38" fill="none" stroke="#1F1F26" stroke-width="1.4"/>
+      <circle cx="50" cy="50" r="32" fill="none" stroke="#1F1F26" stroke-width="1.4"/>
+      <circle cx="50" cy="50" r="17" fill="#D9B45A"/>
+      <text x="50" y="56" text-anchor="middle" font-size="15" font-weight="900" fill="#241B05" font-family="Frank Ruhl Libre,serif">♪</text>
+    </svg>
+    <h1 class="logo">ניגון בזמן</h1>
+    <p class="tagline">מי מכיר הכי טוב את המוזיקה החסידית?<br>מקמו כל שיר על ציר הזמן — ונצחו.</p>
+    <div class="home-actions">
+      <button class="btn" onclick="go('scrSetup')">▶&nbsp; משחק חדש</button>
+      <button class="btn ghost" onclick="go('scrHow')">איך משחקים?</button>
+    </div>
+    <button class="admin-link" onclick="adminGate()">ניהול קטלוג</button>
+  </div>
+</div>
+
+<!-- ============ HOW TO ============ -->
+<div class="screen" id="scrHow">
+  <div class="wrap">
+    <div class="topbar"><button class="back" onclick="go('scrHome')">→</button><h2>איך משחקים</h2></div>
+    <div class="card-panel" style="display:flex;flex-direction:column;gap:14px;font-size:15px;line-height:1.65">
+      <div><b style="color:var(--gold-bright)">1 · מאזינים.</b><br>בכל תור מתנגן שיר מסתורין — בלי שם ובלי אמן.</div>
+      <div><b style="color:var(--gold-bright)">2 · ממקמים.</b><br>הקישו על משבצת בציר הזמן שלכם: לפני, אחרי או בין השירים שכבר צברתם. לא צריך לדעת שנה מדויקת — רק את הסדר הנכון.</div>
+      <div><b style="color:var(--gold-bright)">3 · חושפים.</b><br>הקלף מתהפך. מיקמתם נכון? הוא נשאר אצלכם. טעיתם? הוא נשרף.</div>
+      <div><b style="color:var(--gold-bright)">4 · בונוס.</b><br>זיהיתם גם את שם השיר והאמן? קבלו אסימון ⭐. שלושה אסימונים שווים קלף מתנה.</div>
+      <div><b style="color:var(--gold-bright)">5 · מנצחים.</b><br>הראשון שממלא את ציר הזמן שלו — לוקח את הכבוד.</div>
+    </div>
+    <div style="height:30px"></div>
+  </div>
+</div>
+
+<!-- ============ SETUP ============ -->
+<div class="screen" id="scrSetup">
+  <div class="wrap">
+    <div class="topbar"><button class="back" onclick="go('scrHome')">→</button><h2>משחק חדש</h2></div>
+
+    <div class="field">
+      <label>שחקנים</label>
+      <div class="player-inputs" id="playerInputs"></div>
+      <button class="add-player" onclick="addPlayerInput()">+ הוספת שחקן</button>
+    </div>
+
+    <div class="field">
+      <label>יעד ניצחון</label>
+      <div class="seg" id="segTarget">
+        <button data-v="5">מהיר · 5</button>
+        <button data-v="8" class="on">רגיל · 8</button>
+        <button data-v="10">מלא · 10</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>רמת קושי</label>
+      <div class="seg" id="segDiff">
+        <button data-v="1">משפחתי</button>
+        <button data-v="0" class="on">מעורב</button>
+        <button data-v="3">מומחים</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>מצב גניבה (ערעורים) ⭐</label>
+      <div class="seg" id="segSteal">
+        <button data-v="0" class="on">כבוי</button>
+        <button data-v="1">פעיל</button>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin-top:6px">יריב עם אסימון יכול לערער על מיקום — אם הוא צודק והשחקן טעה, הקלף עובר אליו.</p>
+    </div>
+
+    <div class="field">
+      <label>מצב משחק</label>
+      <div class="seg" id="segMode">
+        <button data-v="chorus" class="on">פזמונים</button>
+        <button data-v="intro">פתיחים בלבד 🔥</button>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin-top:6px" id="modeHint">במצב פתיחים מושמעות רק השניות הראשונות — אתגר כפול: לזהות וגם למקם.</p>
+    </div>
+
+    <button class="btn" id="setupStart" onclick="startGame()">יאללה, מתחילים 🎵</button>
+  </div>
+</div>
+
+<!-- ============ GAME ============ -->
+<div class="screen" id="scrGame">
+  <div class="wrap">
+    <div class="players-bar" id="playersBar"></div>
+    <div class="stage">
+      <div class="turn-label" id="turnLabel"></div>
+      <div class="vinyl-wrap">
+        <div class="progress-ring" id="progressRing"></div>
+        <div class="vinyl" id="vinyl">
+          <div class="vinyl-label">♪</div>
+        </div>
+        <div class="vinyl-q" id="vinylQ">?</div>
+      </div>
+      <div class="eq" id="eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="play-controls" id="playControls"></div>
+    </div>
+  </div>
+  <div class="tl-zone">
+    <div class="tl-head">
+      <span class="eyebrow">ציר הזמן שלי</span>
+      <span class="tl-hint" id="tlHint"></span>
+    </div>
+    <div class="timeline" id="timeline"></div>
+  </div>
+</div>
+
+<!-- ============ REVEAL OVERLAY ============ -->
+<div class="overlay" id="revealOverlay">
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div class="flip-scene">
+      <div class="flip-card" id="flipCard">
+        <div class="face front">?</div>
+        <div class="face back">
+          <div class="ryear" id="rYear"></div>
+          <div class="rtitle" id="rTitle"></div>
+          <div class="rartist" id="rArtist"></div>
+        </div>
+      </div>
+    </div>
+    <div class="verdict" id="verdict"></div>
+    <div class="bonus-q" id="bonusQ">
+      <p>⭐ זיהה את שם השיר והאמן לפני החשיפה?</p>
+      <div class="row">
+        <button class="btn small ghost" style="flex:1" onclick="bonusAnswer(true)">כן! +אסימון</button>
+        <button class="btn small ghost" style="flex:1" onclick="bonusAnswer(false)">לא</button>
+      </div>
+    </div>
+    <button class="btn" id="revealNext" style="display:none" onclick="nextTurn()">לתור הבא ←</button>
+  </div>
+</div>
+
+<!-- ============ CHALLENGE OVERLAY ============ -->
+<div class="overlay" id="challengeOverlay">
+  <div style="display:flex;flex-direction:column;align-items:center;text-align:center">
+    <div class="eyebrow">רגע האמת</div>
+    <h2 style="font-family:var(--disp);font-size:26px;margin-top:8px">מישהו מערער? ⭐</h2>
+    <p class="muted" style="font-size:14px;margin-top:6px">ערעור עולה אסימון אחד.<br>צדקתם והשחקן טעה? הקלף שלכם.</p>
+    <div class="challenge-btns" id="challengeBtns"></div>
+    <div class="challenge-bar"><i id="challengeBarFill"></i></div>
+    <button class="btn ghost" style="max-width:290px;margin-top:14px" onclick="endChallengeWindow()">אין ערעור — חושפים</button>
+  </div>
+</div>
+
+<!-- ============ WIN ============ -->
+<div class="screen" id="scrWin">
+  <div class="wrap">
+    <div class="win-crown">👑</div>
+    <div class="eyebrow">המנצח</div>
+    <div id="winName"></div>
+    <p class="muted" id="winStats"></p>
+    <div style="height:14px"></div>
+    <button class="btn" onclick="go('scrSetup')">משחק נוסף</button>
+    <button class="btn ghost" onclick="go('scrHome')">למסך הבית</button>
+  </div>
+</div>
+
+<!-- ============ ADMIN ============ -->
+<div class="screen" id="scrAdmin">
+  <div class="wrap">
+    <div class="topbar"><button class="back" onclick="go('scrHome')">→</button><h2>ניהול קטלוג</h2>
+      <button class="btn small ghost" onclick="adminLogout()">התנתקות</button></div>
+
+    <div class="stat-cards">
+      <div class="card-panel"><div class="num" id="statTotal">0</div><div class="lbl">שירים פעילים</div></div>
+      <div class="card-panel"><div class="num" id="statNoLink">0</div><div class="lbl">חסר קישור</div></div>
+      <div class="card-panel"><div class="num" id="statPlays">0</div><div class="lbl">השמעות</div></div>
+    </div>
+
+    <div class="eyebrow" style="margin-bottom:6px">מאזן לפי עשורים</div>
+    <div class="decades" id="decades"></div>
+
+    <div class="card-panel" style="margin-bottom:16px">
+      <div class="eyebrow" style="margin-bottom:10px">סטטיסטיקת משחקים</div>
+      <div class="grid2">
+        <div class="field" style="margin:0"><label>מתאריך</label><input type="date" id="aFrom" onchange="renderAnalytics()"></div>
+        <div class="field" style="margin:0"><label>עד תאריך</label><input type="date" id="aTo" onchange="renderAnalytics()"></div>
+      </div>
+      <div class="seg" id="segGroup" style="margin:10px 0">
+        <button data-v="day" class="on">יום</button><button data-v="week">שבוע</button>
+        <button data-v="month">חודש</button><button data-v="year">שנה</button>
+      </div>
+      <div class="stat-cards" style="margin:0 0 10px">
+        <div class="card-panel"><div class="num" id="aGames">0</div><div class="lbl">משחקים</div></div>
+        <div class="card-panel"><div class="num" id="aPlayers">0</div><div class="lbl">ממוצע שחקנים</div></div>
+        <div class="card-panel"><div class="num" id="aPct">—</div><div class="lbl">אחוז הצלחה</div></div>
+      </div>
+      <div class="decades" id="aChart" style="height:92px"></div>
+      <p class="muted" id="aNote" style="font-size:12px;margin-top:8px"></p>
+    </div>
+
+    <div class="admin-tools">
+      <button class="btn small" onclick="openSongModal()">+ שיר חדש</button>
+      <button class="btn small ghost" onclick="exportJSON()">ייצוא JSON</button>
+      <button class="btn small ghost" onclick="document.getElementById('importFile').click()">ייבוא JSON</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
+    </div>
+    <input id="adminSearch" placeholder="חיפוש שיר או אמן…" oninput="renderAdmin()" style="margin-bottom:10px">
+    <div class="song-list" id="songList"></div>
+    <div style="height:30px"></div>
+  </div>
+</div>
+
+<!-- ============ ADMIN LOGIN MODAL ============ -->
+<div class="modal" id="loginModal">
+  <div class="modal-box" style="max-width:380px">
+    <h3>כניסת ניהול</h3>
+    <p class="muted" style="font-size:12.5px;margin-bottom:12px">התחברות מאובטחת דרך Supabase Auth.</p>
+    <div class="field"><label>אימייל</label><input id="logEmail" type="email" autocomplete="username" placeholder="admin@example.com"></div>
+    <div class="field"><label>סיסמה</label><input id="logPass" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" style="flex:2" id="logBtn" onclick="doLogin()">התחברות</button>
+      <button class="btn ghost" style="flex:1" onclick="closeModal('loginModal')">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ SONG MODAL ============ -->
+<div class="modal" id="songModal">
+  <div class="modal-box">
+    <h3 id="modalTitle">שיר חדש</h3>
+    <p class="muted" style="font-size:12.5px;margin-bottom:10px">הדביקו קישור יוטיוב — המזהה יחולץ אוטומטית.</p>
+    <div class="field"><label>קישור יוטיוב</label><input id="fYt" placeholder="https://www.youtube.com/watch?v=…" oninput="onYtInput()"></div>
+    <div id="ytFrameWrap" style="display:none">
+      <div class="yt-frame" id="ytFrame"></div>
+      <div class="calib">
+        <button class="btn small ghost" onclick="setStartFromPlayer()">📍 קבע התחלה מהנגן</button>
+        <button class="btn small ghost" onclick="previewClip()">▶ תצוגה מקדימה לשחקן</button>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label>שם השיר</label><input id="fTitle"></div>
+      <div class="field"><label>אמן</label><input id="fArtist"></div>
+      <div class="field"><label>שנת יציאה</label><input id="fYear" type="number" min="1950" max="2030"></div>
+      <div class="field"><label>אלבום (רשות)</label><input id="fAlbum"></div>
+      <div class="field"><label>התחלת קטע (דק:שנ׳)</label><input id="fStart" placeholder="1:05"></div>
+      <div class="field"><label>משך קטע (שניות)</label><input id="fDur" type="number" value="27"></div>
+      <div class="field"><label>רמת קושי</label>
+        <select id="fDiff"><option value="1">⭐ קל</option><option value="2">⭐⭐ בינוני</option><option value="3">⭐⭐⭐ מומחה</option></select>
+      </div>
+      <div class="field"><label>פעיל במשחק</label>
+        <select id="fActive"><option value="1">כן</option><option value="0">לא</option></select>
+      </div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" style="flex:2" onclick="saveSong()">שמירה</button>
+      <button class="btn ghost" style="flex:1" onclick="closeSongModal()">ביטול</button>
+      <button class="btn danger small" id="btnDelete" style="display:none" onclick="deleteSong()">מחיקה</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div id="ytHidden" style="position:fixed;width:230px;height:130px;left:-9999px;top:0;opacity:0;pointer-events:none"></div>
+
+<script>
+/* =====================================================================
+   ניגון בזמן · v1
+   ---------------------------------------------------------------------
+   הרצה חד-פעמית ב-Supabase SQL Editor:
+
+   create table songs (
+     id uuid primary key default gen_random_uuid(),
+     title text not null, artist text not null, album text,
+     year int not null, youtube_id text, audio_url text,
+     audio_source text default 'youtube',
+     start_seconds int default 0, duration_seconds int default 27,
+     intro_start_seconds int default 0,
+     difficulty int default 2, category text,
+     is_active boolean default true, verified boolean default false,
+     plays int default 0, correct int default 0,
+     created_at timestamptz default now()
+   );
+   create table game_sessions (
+     id uuid primary key default gen_random_uuid(),
+     created_at timestamptz default now(),
+     players_count int, mode text, target int,
+     winner_name text, total_placements int, correct_placements int
+   );
+
+   alter table songs enable row level security;
+   alter table game_sessions enable row level security;
+
+   -- קריאת קטלוג: פתוחה לכולם (גם אנונימי)
+   create policy songs_read on songs for select using (true);
+   -- כתיבת קטלוג: רק משתמש מחובר (אדמין)
+   create policy songs_write on songs for all to authenticated using (true) with check (true);
+
+   -- רישום משחק: כל שחקן (גם אנונימי) רשאי להוסיף
+   create policy gs_insert on game_sessions for insert with check (true);
+   -- צפייה בסטטיסטיקות: רק אדמין מחובר
+   create policy gs_read on game_sessions for select to authenticated using (true);
+
+   -- צרו משתמש אדמין: Authentication > Users > Add user (אימייל + סיסמה)
+      ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: 'https://pbubxvbvfqfhdlnuqoky.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBidWJ4dmJ2ZnFmaGRsbnVxb2t5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwNTI4NjIsImV4cCI6MjA5NjYyODg2Mn0.OrBKIBIX98u164s8CZKDv1CU2j7FtTUXEHG4U8w59qs'
+};
+/* ניהול גישה: התחברות עם אימייל+סיסמה דרך Supabase Auth (ראו setup ב-SQL למטה).
+   רק משתמש מחובר יכול לכתוב לטבלאות — נאכף ב-RLS, לא בצד הלקוח. */
+
+/* קטלוג דמו — שנים לאימות! החליפו/ערכו דרך פאנל הניהול */
+const SEED_SONGS = [
+  {title:'עם ישראל חי', artist:'שלמה קרליבך', year:1965, diff:2},
+  {title:'יידן', artist:'מרדכי בן דוד', year:1986, diff:1},
+  {title:'ירושלים אינה למכירה', artist:'מרדכי בן דוד', year:1989, diff:1},
+  {title:'אדרבה', artist:'אברהם פריד', year:1991, diff:1},
+  {title:'מאמינים בני מאמינים', artist:'מרדכי בן דוד', year:1994, diff:1},
+  {title:'שמע ישראל', artist:'יעקב שוואקי', year:2001, diff:2},
+  {title:'ועד שיבנה', artist:'יעקב שוואקי', year:2007, diff:2},
+  {title:'יש תקווה', artist:'בני פרידמן', year:2013, diff:1},
+  {title:'בלבבי', artist:'מוטי שטיינמץ', year:2017, diff:2},
+  {title:'סדר העבודה', artist:'ישי ריבו', year:2019, diff:1},
+].map((s,i)=>({
+  id:'seed-'+i, title:s.title, artist:s.artist, album:'', year:s.year,
+  youtube_id:'', audio_url:'', audio_source:'youtube',
+  start_seconds:0, duration_seconds:27, intro_start_seconds:0,
+  difficulty:s.diff, is_active:true, verified:false, plays:0, correct:0
+}));
+
+let catalog = [...SEED_SONGS];
+let sb = null; // supabase client
+
+/* ---------- כלים ---------- */
+const $ = id => document.getElementById(id);
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2400); }
+function go(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); if(id==='scrAdmin') renderAdmin(); window.scrollTo(0,0); }
+function fmtTime(sec){ sec=Math.max(0,Math.round(sec)); return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0'); }
+function parseTime(str){ if(!str) return 0; const p=String(str).trim().split(':'); return p.length===2 ? (+p[0])*60+(+p[1]) : (+p[0]||0); }
+function extractYtId(url){ if(!url) return ''; const m=String(url).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : (/^[\w-]{11}$/.test(url.trim()) ? url.trim() : ''); }
+
+/* ---------- Supabase + Auth ---------- */
+let sbReady=false, isAdmin=false;
+async function initSupabase(){
+  if(!CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY) return;
+  try{
+    await new Promise((res,rej)=>{ const sc=document.createElement('script');
+      sc.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'; sc.onload=res; sc.onerror=rej; document.head.appendChild(sc); });
+    sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    sbReady=true;
+    const {data:{session}} = await sb.auth.getSession();
+    isAdmin = !!session;
+    sb.auth.onAuthStateChange((_e,sess)=>{ isAdmin=!!sess; });
+    await loadCatalog();
+  }catch(e){ console.warn('Supabase:',e); toast('עובדים במצב מקומי'); }
+}
+async function loadCatalog(){
+  try{
+    const {data,error} = await sb.from('songs').select('*').order('year');
+    if(error) throw error;
+    if(data && data.length) catalog = data;
+    else toast('הקטלוג בענן ריק — ייבאו שירים בפאנל');
+  }catch(e){ console.warn(e); }
+}
+async function adminLogin(email,pass){
+  if(!sbReady) { toast('אין חיבור לענן'); return false; }
+  const {error} = await sb.auth.signInWithPassword({email,password:pass});
+  if(error){ toast('התחברות נכשלה: '+(error.message||'')); return false; }
+  isAdmin=true; return true;
+}
+async function adminLogout(){ if(sb){ await sb.auth.signOut(); } isAdmin=false; go('scrHome'); toast('התנתקת'); }
+
+async function sbUpsert(song){
+  if(!sb||!isAdmin) return;
+  const isLocal = String(song.id).startsWith('seed-')||String(song.id).startsWith('loc-')||String(song.id).startsWith('imp-');
+  try{
+    if(isLocal){ const {id,...rest}=song; const {data}=await sb.from('songs').insert(rest).select().single(); if(data) song.id=data.id; }
+    else await sb.from('songs').upsert(song);
+  }catch(e){ console.warn(e); toast('שמירה נכשלה'); }
+}
+async function sbDelete(id){
+  if(!sb||!isAdmin) return;
+  if(String(id).startsWith('seed-')||String(id).startsWith('loc-')||String(id).startsWith('imp-')) return;
+  try{ await sb.from('songs').delete().eq('id',id); }catch(e){ console.warn(e); }
+}
+async function sbStats(song){
+  if(!sb) return;
+  const isLocal = String(song.id).startsWith('seed-')||String(song.id).startsWith('loc-')||String(song.id).startsWith('imp-');
+  if(isLocal) return;
+  try{ await sb.from('songs').update({plays:song.plays,correct:song.correct}).eq('id',song.id); }catch(e){}
+}
+
+/* ---------- מנוע נגינה ---------- */
+let ytPlayer=null, ytReadyResolve, ytReady=new Promise(r=>ytReadyResolve=r), ytLoaded=false;
+let clipTimer=null, ringTimer=null;
+
+function loadYtApi(){
+  if(ytLoaded) return ytReady; ytLoaded=true;
+  window.onYouTubeIframeAPIReady = ()=>{
+    ytPlayer = new YT.Player('ytHidden',{width:'230',height:'130',playerVars:{playsinline:1,controls:0,disablekb:1},
+      events:{onReady:()=>ytReadyResolve()}});
+  };
+  const s=document.createElement('script'); s.src='https://www.youtube.com/iframe_api';
+  s.onerror=()=>console.warn('YT API blocked'); document.head.appendChild(s);
+  return ytReady;
+}
+
+function stopClip(){
+  clearTimeout(clipTimer); clearInterval(ringTimer);
+  try{ ytPlayer && ytPlayer.stopVideo(); }catch(e){}
+  $('vinyl').classList.remove('spin'); $('eq').classList.remove('live');
+  $('progressRing').style.setProperty('--p',0);
+}
+
+function runVisuals(dur){
+  $('vinyl').classList.add('spin'); $('eq').classList.add('live');
+  const t0=Date.now();
+  ringTimer=setInterval(()=>{
+    const p=Math.min(100,(Date.now()-t0)/(dur*10));
+    $('progressRing').style.setProperty('--p',p);
+    if(p>=100) clearInterval(ringTimer);
+  },120);
+}
+
+async function playClip(song, mode){
+  stopClip();
+  const dur = mode==='intro' ? 9 : (song.duration_seconds||27);
+  const start = mode==='intro' ? (song.intro_start_seconds||0) : (song.start_seconds||0);
+  if(song.youtube_id){
+    try{
+      await loadYtApi();
+      ytPlayer.loadVideoById({videoId:song.youtube_id, startSeconds:start});
+      ytPlayer.setVolume(100);
+      runVisuals(dur);
+      clipTimer=setTimeout(stopClip, dur*1000);
+      return;
+    }catch(e){ console.warn(e); }
+  }
+  /* מצב דמו — אין מקור שמע */
+  runVisuals(dur);
+  toast('🎵 מצב דמו — לשיר זה אין עדיין קישור שמע');
+  clipTimer=setTimeout(stopClip, dur*1000);
+}
+
+/* ---------- מצב משחק ---------- */
+document.querySelectorAll('.seg').forEach(s=>s.addEventListener('click',e=>{
+  if(e.target.tagName!=='BUTTON') return;
+  s.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+  e.target.classList.add('on');
+  if(s.id==='segGroup') renderAnalytics();
+}));
+
+function addPlayerInput(name=''){
+  const box=$('playerInputs');
+  if(box.children.length>=6) return toast('עד 6 שחקנים');
+  const row=document.createElement('div'); row.className='row';
+  row.innerHTML=`<input placeholder="שם שחקן" value="${name}" maxlength="14">
+    <button class="del-player" onclick="this.parentNode.remove()">✕</button>`;
+  box.appendChild(row);
+}
+addPlayerInput('שחקן 1'); addPlayerInput('שחקן 2');
+
+const G = { players:[], turn:0, deck:[], current:null, target:8, mode:'chorus', listened:false,
+  steal:false, placedSlot:-1, challenge:null, challengePick:false };
+
+function startGame(){
+  const names=[...$('playerInputs').querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
+  if(names.length<1) return toast('הוסיפו לפחות שחקן אחד');
+  G.target = +document.querySelector('#segTarget button.on').dataset.v;
+  G.mode = document.querySelector('#segMode button.on').dataset.v;
+  G.steal = document.querySelector('#segSteal button.on').dataset.v==='1';
+  const diff = +document.querySelector('#segDiff button.on').dataset.v;
+
+  let pool = catalog.filter(s=>s.is_active);
+  if(diff===1) pool=pool.filter(s=>s.difficulty<=1);
+  if(diff===3) pool=pool.filter(s=>s.difficulty>=2);
+  if(pool.length < names.length + G.target + 4) { pool = catalog.filter(s=>s.is_active); }
+  if(pool.length < names.length + 3) return toast('אין מספיק שירים בקטלוג — הוסיפו בפאנל הניהול');
+
+  G.placed=0; G.correctPlaced=0;
+  G.deck = shuffle(pool);
+  G.players = names.map(n=>({name:n, tokens:0, timeline:[G.deck.pop()]}));
+  G.players.forEach(p=>p.timeline.sort((a,b)=>a.year-b.year));
+  G.turn = -1;
+  go('scrGame');
+  nextTurn(true);
+}
+
+function curPlayer(){ return G.players[G.turn]; }
+
+function nextTurn(first){
+  $('revealOverlay').classList.remove('show');
+  $('flipCard').classList.remove('flipped');
+  $('verdict').classList.remove('show'); $('bonusQ').classList.remove('show');
+  $('revealNext').style.display='none';
+  stopClip();
+
+  if(!first){
+    const w=G.players.find(p=>p.timeline.length>=G.target);
+    if(w) return showWin(w);
+  }
+  if(!G.deck.length){ const w=[...G.players].sort((a,b)=>b.timeline.length-a.timeline.length)[0]; return showWin(w,true); }
+
+  G.turn=(G.turn+1)%G.players.length;
+  G.current=G.deck.pop();
+  G.listened=false; G.challenge=null; G.challengePick=false; G.placedSlot=-1;
+  renderGame();
+}
+
+function renderGame(){
+  const p=curPlayer();
+  $('playersBar').innerHTML = G.players.map((pl,i)=>`
+    <div class="pchip ${i===G.turn?'turn':''}">
+      <span>${pl.name}</span><span class="cnt">${pl.timeline.length}</span>
+      ${pl.tokens?`<span class="tok">⭐${pl.tokens}</span>`:''}
+    </div>`).join('');
+  $('turnLabel').innerHTML=`התור של <b>${p.name}</b> · ${G.mode==='intro'?'מצב פתיחים 🔥':'שיר מסתורין'}`;
+
+  const tokenBtn = p.tokens>=3 ? `<button class="btn small ghost" onclick="redeemTokens()">⭐3 = קלף מתנה</button>` : '';
+  const swapBtn = (p.tokens>=1 && G.deck.length) ? `<button class="btn small ghost" onclick="swapSong()">🔄 החלף שיר · ⭐1</button>` : '';
+  $('playControls').innerHTML=`
+    <button class="btn btn-play" onclick="onPlay()">▶ &nbsp;השמע</button>
+    <button class="btn small ghost" onclick="playClip(G.current,G.mode)">↻</button> ${swapBtn} ${tokenBtn}`;
+  renderTimeline();
+}
+
+function onPlay(){ playClip(G.current,G.mode); if(!G.listened){ G.listened=true; armSlots(); } }
+
+let dragState=null;
+function enableVinylDrag(){
+  const wrap=$('vinyl-wrapEl')||document.querySelector('.vinyl-wrap');
+  wrap.id='vinyl-wrapEl';
+  wrap.classList.toggle('grabbable', G.listened && !G.challengePick);
+  if(wrap._dragBound) return; wrap._dragBound=true;
+
+  const start=(e)=>{
+    if(!G.listened) return;
+    e.preventDefault();
+    const pt=e.touches?e.touches[0]:e;
+    const r=wrap.getBoundingClientRect();
+    dragState={ox:pt.clientX-(r.left+r.width/2), oy:pt.clientY-(r.top+r.height/2), hot:null};
+    wrap.classList.add('dragging');
+    move(e);
+    document.addEventListener('mousemove',move,{passive:false});
+    document.addEventListener('touchmove',move,{passive:false});
+    document.addEventListener('mouseup',end);
+    document.addEventListener('touchend',end);
+  };
+  const move=(e)=>{
+    if(!dragState) return;
+    e.preventDefault();
+    const pt=e.touches?e.touches[0]:e;
+    wrap.style.position='fixed';
+    wrap.style.left=(pt.clientX-dragState.ox-wrap.offsetWidth/2)+'px';
+    wrap.style.top=(pt.clientY-dragState.oy-wrap.offsetHeight/2)+'px';
+    const el=document.elementFromPoint(pt.clientX,pt.clientY);
+    const slot=el&&el.closest('.slot.armed');
+    if(slot!==dragState.hot){
+      dragState.hot&&dragState.hot.classList.remove('hot');
+      dragState.hot=slot; slot&&slot.classList.add('hot');
+    }
+  };
+  const end=()=>{
+    document.removeEventListener('mousemove',move);
+    document.removeEventListener('touchmove',move);
+    document.removeEventListener('mouseup',end);
+    document.removeEventListener('touchend',end);
+    const hot=dragState&&dragState.hot;
+    wrap.classList.remove('dragging');
+    wrap.style.position=''; wrap.style.left=''; wrap.style.top='';
+    if(hot){ hot.classList.remove('hot'); const idx=+hot.dataset.idx; dragState=null; place(idx); }
+    else dragState=null;
+  };
+  wrap.addEventListener('mousedown',start);
+  wrap.addEventListener('touchstart',start,{passive:false});
+}
+
+function renderTimeline(){
+  const p=curPlayer(), tl=$('timeline'); tl.innerHTML='';
+  const slot=i=>{ const d=document.createElement('button'); d.className='slot'; d.dataset.idx=i; d.textContent='+'; d.onclick=()=>place(i); tl.appendChild(d); };
+  slot(0);
+  p.timeline.forEach((s,i)=>{
+    const c=document.createElement('div'); c.className='tcard';
+    c.innerHTML=`<div class="yr">${s.year}</div><div class="tt">${s.title}<br>${s.artist}</div>`;
+    tl.appendChild(c); slot(i+1);
+  });
+  $('tlHint').textContent = G.listened?'גררו את התקליט או הקישו על +':'האזינו קודם לשיר…';
+  armSlots();
+  enableVinylDrag();
+}
+function armSlots(){
+  document.querySelectorAll('.slot').forEach(s=>s.classList.toggle('armed',G.listened));
+  const w=document.querySelector('.vinyl-wrap'); if(w) w.classList.toggle('grabbable', G.listened && !G.challengePick);
+}
+
+function place(idx){
+  if(!G.listened) return;
+  stopClip();
+  if(G.challengePick){
+    if(idx===G.placedSlot) return;
+    G.challenge.slot=idx; G.challengePick=false;
+    return resolveReveal();
+  }
+  G.placedSlot=idx;
+  const rivals=G.players.map((p,i)=>({p,i})).filter(x=>x.i!==G.turn && x.p.tokens>=1);
+  if(G.steal && rivals.length) return openChallenge(rivals);
+  resolveReveal();
+}
+
+let challengeTimer=null;
+function openChallenge(rivals){
+  $('challengeBtns').innerHTML=rivals.map(x=>
+    `<button class="btn ghost" onclick="acceptChallenge(${x.i})">⭐ ${x.p.name} מערער!</button>`).join('');
+  $('challengeOverlay').classList.add('show');
+  const total=6000, t0=Date.now();
+  challengeTimer=setInterval(()=>{
+    const left=Math.max(0,total-(Date.now()-t0));
+    $('challengeBarFill').style.width=(left/total*100)+'%';
+    if(!left) endChallengeWindow();
+  },100);
+}
+function endChallengeWindow(){
+  clearInterval(challengeTimer);
+  $('challengeOverlay').classList.remove('show');
+  if(!G.challengePick && !G.challenge) resolveReveal();
+}
+function acceptChallenge(pIdx){
+  clearInterval(challengeTimer);
+  $('challengeOverlay').classList.remove('show');
+  G.players[pIdx].tokens--;
+  G.challenge={pIdx, slot:null};
+  G.challengePick=true;
+  renderGame();
+  G.listened=true; armSlots();
+  $('tlHint').textContent=G.players[pIdx].name+': בחרו משבצת אחרת לערעור';
+  const slots=document.querySelectorAll('.slot');
+  if(slots[G.placedSlot]){ slots[G.placedSlot].classList.add('taken'); slots[G.placedSlot].textContent='✕'; }
+  toast('⭐ '+G.players[pIdx].name+' מערער — אסימון שולם');
+}
+
+function fits(tl,idx,year){
+  const left = idx>0 ? tl[idx-1].year : -Infinity;
+  const right = idx<tl.length ? tl[idx].year : Infinity;
+  return year>=left && year<=right;
+}
+
+function resolveReveal(){
+  const p=curPlayer(), tl=p.timeline, s=G.current;
+  const okA = fits(tl,G.placedSlot,s.year);
+  const ch = G.challenge;
+  const okC = ch && ch.slot!==null ? fits(tl,ch.slot,s.year) : false;
+
+  s.plays=(s.plays||0)+1; if(okA) s.correct=(s.correct||0)+1; sbStats(s);
+  G.placed++; if(okA) G.correctPlaced++;
+
+  $('rYear').textContent=s.year; $('rTitle').textContent=s.title;
+  $('rArtist').textContent=s.artist + (s.album?' · '+s.album:'');
+  $('revealOverlay').classList.add('show');
+  setTimeout(()=>$('flipCard').classList.add('flipped'),350);
+  setTimeout(()=>{
+    const v=$('verdict');
+    if(okA){
+      v.textContent= ch ? '✓ '+p.name+' צדק — הערעור נכשל!' : '✓ מיקום מדויק!';
+      v.className='verdict show ok';
+      confetti(); tl.splice(G.placedSlot,0,s);
+    }else if(ch && okC){
+      const c=G.players[ch.pIdx];
+      v.textContent='⚡ הערעור הצליח! הקלף עובר ל'+c.name;
+      v.className='verdict show ok';
+      confetti();
+      c.timeline.push(s); c.timeline.sort((a,b)=>a.year-b.year);
+    }else{
+      v.textContent= ch ? '✗ שניכם טעיתם — הקלף נשרף' : '✗ לא הפעם…';
+      v.className='verdict show bad';
+    }
+    if(navigator.vibrate) navigator.vibrate(okA||okC?[30,40,30]:[120]);
+    $('bonusQ').classList.add('show');
+  },1200);
+}
+
+function swapSong(){
+  const p=curPlayer();
+  if(p.tokens<1 || !G.deck.length) return;
+  p.tokens--;
+  G.deck.unshift(G.current);
+  G.current=G.deck.pop();
+  G.listened=false; stopClip();
+  renderGame();
+  toast('🔄 שיר הוחלף — אסימון שולם');
+}
+
+function bonusAnswer(yes){
+  if(yes){ curPlayer().tokens++; toast('⭐ אסימון ל'+curPlayer().name); }
+  $('bonusQ').classList.remove('show');
+  $('revealNext').style.display='block';
+}
+
+function redeemTokens(){
+  const p=curPlayer(); if(p.tokens<3||!G.deck.length) return;
+  p.tokens-=3;
+  const gift=G.deck.pop();
+  p.timeline.push(gift); p.timeline.sort((a,b)=>a.year-b.year);
+  toast(`🎁 קלף מתנה: ${gift.title} (${gift.year})`);
+  renderGame();
+  const w=G.players.find(pl=>pl.timeline.length>=G.target); if(w) setTimeout(()=>showWin(w),900);
+}
+
+function confetti(){
+  const colors=['#D9B45A','#F2D284','#F4EFE2','#9A7A2E'];
+  for(let i=0;i<36;i++){ const c=document.createElement('div'); c.className='confetti';
+    c.style.cssText=`left:${Math.random()*100}vw;background:${colors[i%4]};animation-duration:${1.4+Math.random()*1.4}s;animation-delay:${Math.random()*.4}s`;
+    document.body.appendChild(c); setTimeout(()=>c.remove(),3200); }
+}
+
+function showWin(w,byDeck){
+  stopClip();
+  sbLogSession({created_at:new Date().toISOString(), players_count:G.players.length,
+    mode:G.mode, target:G.target, winner_name:w.name,
+    total_placements:G.placed, correct_placements:G.correctPlaced});
+  $('winName').textContent=w.name;
+  $('winStats').textContent=(byDeck?'הקטלוג נגמר! ':'')+`${w.timeline.length} שירים על הציר · ${w.tokens} אסימונים`;
+  confetti(); go('scrWin');
+}
+
+/* ---------- סטטיסטיקת משחקים ---------- */
+let sessions=[]; // גיבוי מקומי לזיכרון בלבד
+async function sbLogSession(sess){
+  sessions.push(sess);
+  if(sb){ try{ await sb.from('game_sessions').insert(sess); }catch(e){ console.warn(e); } }
+}
+async function renderAnalytics(){
+  if(!$('aFrom').value){
+    const d=new Date(); $('aTo').value=d.toISOString().slice(0,10);
+    d.setDate(d.getDate()-30); $('aFrom').value=d.toISOString().slice(0,10);
+  }
+  let data=[...sessions];
+  if(sb){ try{ const {data:d}=await sb.from('game_sessions').select('*'); if(d) data=d; }catch(e){} }
+  const from=new Date($('aFrom').value), to=new Date($('aTo').value+'T23:59:59');
+  data=data.filter(x=>{ const t=new Date(x.created_at); return t>=from && t<=to; });
+
+  $('aGames').textContent=data.length;
+  $('aPlayers').textContent=data.length?(data.reduce((a,x)=>a+(x.players_count||0),0)/data.length).toFixed(1):'0';
+  const tp=data.reduce((a,x)=>a+(x.total_placements||0),0);
+  const cp=data.reduce((a,x)=>a+(x.correct_placements||0),0);
+  $('aPct').textContent=tp?Math.round(cp/tp*100)+'%':'—';
+
+  const g=document.querySelector('#segGroup button.on').dataset.v;
+  const keyOf=t=>{ const d=new Date(t);
+    if(g==='day')   return d.toISOString().slice(0,10);
+    if(g==='month') return d.toISOString().slice(0,7);
+    if(g==='year')  return String(d.getFullYear());
+    const jan=new Date(d.getFullYear(),0,1);
+    const wk=Math.ceil(((d-jan)/864e5 + jan.getDay()+1)/7);
+    return d.getFullYear()+' · ש׳'+wk; };
+  const buckets={}; data.forEach(x=>{ const k=keyOf(x.created_at); buckets[k]=(buckets[k]||0)+1; });
+  const keys=Object.keys(buckets).sort().slice(-14);
+  const max=Math.max(1,...keys.map(k=>buckets[k]));
+  $('aChart').innerHTML=keys.map(k=>
+    `<div class="bar" title="${k}: ${buckets[k]} משחקים"><i style="height:${Math.round(buckets[k]/max*62)+4}px"></i><span>${g==='day'?k.slice(5):g==='month'?k.slice(2):k}</span></div>`
+  ).join('')||'<span class="muted">אין משחקים בטווח שנבחר</span>';
+  $('aNote').textContent=sb?'':'⚠️ ללא חיבור Supabase, נתוני המשחקים נשמרים רק עד רענון הדף';
+}
+
+/* ---------- אדמין ---------- */
+let editingId=null, modalYt=null;
+
+function closeModal(id){ $(id).classList.remove('show'); }
+function adminGate(){
+  if(!sbReady){ toast('אין חיבור לענן — נסו שוב בעוד רגע'); return; }
+  if(isAdmin){ go('scrAdmin'); return; }
+  $('logEmail').value=''; $('logPass').value='';
+  $('loginModal').classList.add('show');
+}
+async function doLogin(){
+  const btn=$('logBtn'); btn.disabled=true; btn.textContent='מתחבר…';
+  const ok=await adminLogin($('logEmail').value.trim(), $('logPass').value);
+  btn.disabled=false; btn.textContent='התחברות';
+  if(ok){ closeModal('loginModal'); await loadCatalog(); go('scrAdmin'); toast('שלום אדמין 👋'); }
+}
+
+function renderAdmin(){
+  renderAnalytics();
+  const q=($('adminSearch').value||'').trim();
+  const list=catalog.filter(s=>!q||s.title.includes(q)||s.artist.includes(q));
+  const active=catalog.filter(s=>s.is_active);
+  $('statTotal').textContent=active.length;
+  $('statNoLink').textContent=catalog.filter(s=>!s.youtube_id&&!s.audio_url).length;
+  $('statPlays').textContent=catalog.reduce((a,s)=>a+(s.plays||0),0);
+
+  /* מאזן עשורים */
+  const dec={}; active.forEach(s=>{ const d=Math.floor(s.year/10)*10; dec[d]=(dec[d]||0)+1; });
+  const keys=Object.keys(dec).sort(); const max=Math.max(1,...Object.values(dec));
+  $('decades').innerHTML=keys.map(k=>`<div class="bar"><i style="height:${Math.round(dec[k]/max*52)+4}px"></i><span>${String(k).slice(2)}׳</span></div>`).join('')||'<span class="muted">אין נתונים</span>';
+
+  $('songList').innerHTML=list.sort((a,b)=>a.year-b.year).map(s=>{
+    const pct=s.plays?Math.round(s.correct/s.plays*100):null;
+    const pctBadge=pct===null?'<span class="badge">אין נתונים</span>'
+      :`<span class="badge ${pct>=70?'good':pct<=40?'bad':''}">${pct}% הצלחה · ${s.plays}▶</span>`;
+    return `<div class="song-row ${s.is_active?'':'off'}" onclick="openSongModal('${s.id}')">
+      <div class="syr">${s.year}</div>
+      <div class="smain"><div class="st">${s.title}</div><div class="sa">${s.artist}${s.album?' · '+s.album:''}</div></div>
+      <div class="badges">
+        ${'⭐'.repeat(s.difficulty||2)}
+        ${!s.youtube_id&&!s.audio_url?'<span class="badge warn">חסר קישור</span>':''}
+        ${s.verified===false?'<span class="badge warn">שנה לאימות</span>':''}
+        ${pctBadge}
+      </div></div>`;
+  }).join('')||'<p class="muted center" style="padding:20px">לא נמצאו שירים</p>';
+}
+
+function openSongModal(id){
+  editingId=id||null;
+  const s=id?catalog.find(x=>x.id===id):null;
+  $('modalTitle').textContent=s?'עריכת שיר':'שיר חדש';
+  $('fYt').value=s&&s.youtube_id?'https://www.youtube.com/watch?v='+s.youtube_id:'';
+  $('fTitle').value=s?s.title:''; $('fArtist').value=s?s.artist:'';
+  $('fYear').value=s?s.year:''; $('fAlbum').value=s?(s.album||''):'';
+  $('fStart').value=s?fmtTime(s.start_seconds||0):'0:00';
+  $('fDur').value=s?(s.duration_seconds||27):27;
+  $('fDiff').value=s?(s.difficulty||2):2;
+  $('fActive').value=s?(s.is_active?1:0):1;
+  $('btnDelete').style.display=s?'block':'none';
+  $('songModal').classList.add('show');
+  onYtInput();
+}
+function closeSongModal(){ $('songModal').classList.remove('show'); destroyModalYt(); }
+function destroyModalYt(){ try{ modalYt&&modalYt.destroy(); }catch(e){} modalYt=null; const f=$('ytFrame'); if(f) f.innerHTML=''; }
+
+async function onYtInput(){
+  const vid=extractYtId($('fYt').value);
+  $('ytFrameWrap').style.display=vid?'block':'none';
+  if(!vid) return destroyModalYt();
+  if(modalYt && modalYt._vid===vid) return;
+  destroyModalYt();
+  try{
+    await loadYtApi();
+    $('ytFrame').innerHTML='<div id="ytFrameInner" style="width:100%;height:100%"></div>';
+    modalYt=new YT.Player('ytFrameInner',{videoId:vid,playerVars:{playsinline:1}});
+    modalYt._vid=vid;
+  }catch(e){ console.warn(e); }
+}
+
+function setStartFromPlayer(){
+  if(!modalYt||!modalYt.getCurrentTime) return toast('הפעילו את הנגן קודם');
+  const t=modalYt.getCurrentTime();
+  $('fStart').value=fmtTime(t);
+  toast('נקבעה התחלה: '+fmtTime(t));
+}
+function previewClip(){
+  if(!modalYt) return;
+  const st=parseTime($('fStart').value), dur=+$('fDur').value||27;
+  modalYt.seekTo(st,true); modalYt.playVideo();
+  setTimeout(()=>{ try{modalYt.pauseVideo();}catch(e){} }, dur*1000);
+  toast(`מנגן ${dur} שניות מ־${fmtTime(st)}`);
+}
+
+function saveSong(){
+  const title=$('fTitle').value.trim(), artist=$('fArtist').value.trim(), year=+$('fYear').value;
+  if(!title||!artist||!year) return toast('חסרים שם, אמן או שנה');
+  const data={
+    title, artist, year, album:$('fAlbum').value.trim(),
+    youtube_id:extractYtId($('fYt').value), audio_source:'youtube',
+    start_seconds:parseTime($('fStart').value), duration_seconds:+$('fDur').value||27,
+    difficulty:+$('fDiff').value, is_active:$('fActive').value==='1', verified:true
+  };
+  if(editingId){
+    const s=catalog.find(x=>x.id===editingId); Object.assign(s,data); sbUpsert(s);
+  }else{
+    const s={id:'loc-'+Date.now(), intro_start_seconds:0, plays:0, correct:0, audio_url:'', ...data};
+    catalog.push(s); sbUpsert(s);
+  }
+  closeSongModal(); renderAdmin(); toast('נשמר ✓');
+}
+function deleteSong(){
+  if(!editingId||!confirm('למחוק את השיר מהקטלוג?')) return;
+  sbDelete(editingId);
+  catalog=catalog.filter(s=>s.id!==editingId);
+  closeSongModal(); renderAdmin(); toast('נמחק');
+}
+
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(catalog,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='nigun-bazman-catalog.json'; a.click();
+}
+function importJSON(ev){
+  const f=ev.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+      const arr=JSON.parse(r.result);
+      if(!Array.isArray(arr)) throw 0;
+      catalog=arr; renderAdmin(); toast(`יובאו ${arr.length} שירים`);
+      if(sb&&isAdmin && confirm('לשמור את '+arr.length+' השירים בענן? (יתווספו לטבלה)')){
+        (async()=>{ let n=0; for(const song of arr){ const {id,...rest}=song;
+          try{ await sb.from('songs').insert(rest); n++; }catch(e){} }
+          toast(n+' שירים נשמרו בענן'); await loadCatalog(); renderAdmin(); })();
+      }
+    }catch(e){ toast('קובץ לא תקין'); } };
+  r.readAsText(f); ev.target.value='';
+}
+
+initSupabase();
+</script>
+</body>
+</html>
