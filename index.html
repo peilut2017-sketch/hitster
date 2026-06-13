@@ -1115,6 +1115,8 @@ function swapSong(){
 function bonusAnswer(yes){
   if(yes){ curPlayer().tokens++; sfx('token'); toast('⭐ אסימון ל'+curPlayer().name); }
   $('bonusQ').classList.remove('show');
+  const winner=G.players.find(p=>p.timeline.length>=G.target);
+  if(winner){ setTimeout(()=>showWin(winner),500); return; }
   $('revealNext').style.display='block';
 }
 
@@ -1353,17 +1355,32 @@ function onYtSearch(){
         </div>`;
       }).join('');
       res.querySelectorAll('.yt-result').forEach((el,i)=>{
-        el._yt={vid:data.items[i].id.videoId, title:data.items[i].snippet.title, channel:data.items[i].snippet.channelTitle};
+        const sn=data.items[i].snippet;
+        el._yt={vid:data.items[i].id.videoId, title:sn.title, channel:sn.channelTitle, desc:sn.description||'', publishedAt:sn.publishedAt||''};
       });
     }catch(e){ toast('שגיאת חיפוש'); }
   },600);
 }
 function escH(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function extractYearHint(text){
+  if(!text) return null;
+  const m=text.match(/\b(19[5-9]\d|20[0-2]\d)\b/g);
+  return m ? +m[0] : null;
+}
 function selectYtResult(vid, el){
   const d=el._yt||{};
   $('fYt').value='https://www.youtube.com/watch?v='+vid;
   if(!$('fTitle').value && d.title) $('fTitle').value=d.title;
   if(!$('fArtist').value && d.channel) $('fArtist').value=d.channel;
+  if(!$('fYear').value){
+    const fromText=extractYearHint(d.desc)||extractYearHint(d.title);
+    const fromUpload=d.publishedAt ? new Date(d.publishedAt).getFullYear() : null;
+    const year=fromText||fromUpload;
+    if(year){
+      $('fYear').value=year;
+      toast(fromText ? `📅 שנה מהתיאור: ${year}` : `📅 שנת העלאה: ${year} — בדקו!`);
+    }
+  }
   $('ytSearchResults').style.display='none';
   $('fYtSearch').value='';
   onYtInput();
