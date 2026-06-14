@@ -368,16 +368,6 @@ h1.logo{
       <p class="muted" style="font-size:12.5px;margin-top:6px" id="modeHint">במצב פתיחים מושמעות רק השניות הראשונות — אתגר כפול: לזהות וגם למקם.</p>
     </div>
 
-    <div class="field" id="introDurField" style="display:none">
-      <label>משך השמעת פתיח</label>
-      <div class="seg" id="segIntroDur">
-        <button data-v="5">5 שנ׳</button>
-        <button data-v="7" class="on">7 שנ׳</button>
-        <button data-v="9">9 שנ׳</button>
-        <button data-v="12">12 שנ׳</button>
-      </div>
-    </div>
-
     <button class="btn" id="setupStart" onclick="startGame()">יאללה, מתחילים 🎵</button>
   </div>
 </div>
@@ -505,6 +495,15 @@ h1.logo{
       <div class="field" style="margin:0">
         <label>מפתח YouTube Data API v3 <span class="muted" style="font-weight:400">(לחיפוש שירים)</span></label>
         <input id="ytApiKeyInput" placeholder="AIzaSy…" oninput="saveYtApiKey()" style="font-size:12px;font-family:monospace">
+      </div>
+      <div class="field" style="margin:12px 0 0">
+        <label>משך השמעת פתיח <span class="muted" style="font-weight:400">(במצב פתיחים)</span></label>
+        <div class="seg" id="segIntroDur" style="margin-top:6px">
+          <button data-v="5">5 שנ׳</button>
+          <button data-v="7" class="on">7 שנ׳</button>
+          <button data-v="9">9 שנ׳</button>
+          <button data-v="12">12 שנ׳</button>
+        </div>
       </div>
     </div>
     <div class="admin-tools">
@@ -856,11 +855,12 @@ document.querySelectorAll('.seg').forEach(s=>s.addEventListener('click',e=>{
   if(s.id==='segGroup') renderAnalytics();
   if(s.id==='segMode'){
     const isIntro=e.target.dataset.v==='intro';
-    $('introDurField').style.display=isIntro?'':'none';
+    const dur=+localStorage.getItem('introDur')||7;
     $('modeHint').textContent=isIntro
-      ? 'במצב פתיחים מושמעות רק השניות הראשונות — בחרו כמה שניות להשמיע ↓'
+      ? `במצב פתיחים מושמעות ${dur} השניות הראשונות — אתגר כפול: לזהות וגם למקם.`
       : 'במצב פזמונים מושמעות 27 שניות מהפזמון.';
   }
+  if(s.id==='segIntroDur') localStorage.setItem('introDur', e.target.dataset.v);
 }));
 
 function addPlayerInput(name=''){
@@ -891,7 +891,7 @@ function startGame(){
   if(pool.length < names.length + 3) return toast('אין מספיק שירים בקטלוג — הוסיפו בפאנל הניהול');
 
   G.placed=0; G.correctPlaced=0; G.totalTurns=0;
-  G.introDur = G.mode==='intro' ? (+document.querySelector('#segIntroDur button.on').dataset.v||7) : 27;
+  G.introDur = G.mode==='intro' ? (+localStorage.getItem('introDur')||7) : 27;
   G.deck = shuffle(pool);
   G.players = names.map(n=>({name:n, tokens:2, timeline:[G.deck.pop()]}));
   G.players.forEach(p=>p.timeline.sort((a,b)=>a.year-b.year));
@@ -1208,7 +1208,7 @@ async function doLogin(){
 }
 
 function renderAdmin(){
-  renderAnalytics(); updateActiveGames();
+  renderAnalytics(); updateActiveGames(); loadYtApiKey(); loadIntroDur();
   const q=($('adminSearch').value||'').trim();
   const list=catalog.filter(s=>!q||s.title.includes(q)||s.artist.includes(q));
   const active=catalog.filter(s=>s.is_active);
@@ -1335,6 +1335,7 @@ function importJSON(ev){
 /* ---------- YouTube API key ---------- */
 function saveYtApiKey(){ localStorage.setItem('ytApiKey',($('ytApiKeyInput').value||'').trim()); }
 function loadYtApiKey(){ const el=$('ytApiKeyInput'); if(el) el.value=localStorage.getItem('ytApiKey')||''; }
+function loadIntroDur(){ const v=localStorage.getItem('introDur')||'7'; const seg=$('segIntroDur'); if(!seg) return; seg.querySelectorAll('button').forEach(b=>{ b.classList.toggle('on', b.dataset.v===v); }); }
 
 /* ---------- YouTube search ---------- */
 let _ytST=null;
