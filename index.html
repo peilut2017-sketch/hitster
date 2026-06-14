@@ -398,16 +398,29 @@ h1.logo{
     <div class="topbar"><button class="back" onclick="go('scrHome')">→</button><h2>משחק ברשת</h2></div>
     <div class="field"><label>השם שלך</label><input id="mpNameInput" placeholder="הכניסו שם" maxlength="14"></div>
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:6px">
-      <button class="btn" onclick="mp_createRoom()">+ צרו חדר חדש</button>
-      <div style="display:flex;align-items:center;gap:10px;margin:2px 0">
+
+      <!-- Quick match -->
+      <div class="field" style="margin:0">
+        <label>⚡ משחק מהיר — כמה שחקנים?</label>
+        <div class="seg" id="mpSegQuick" style="margin-bottom:10px">
+          <button data-v="2" class="on">2 שחקנים</button>
+          <button data-v="3">3 שחקנים</button>
+          <button data-v="4">4 שחקנים</button>
+        </div>
+        <button class="btn" id="quickMatchBtn" onclick="mp_quickMatch()">⚡ מצאו לי שחקן</button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin:4px 0">
         <hr style="flex:1;border:none;border-top:1px solid var(--line)">
-        <span class="muted" style="font-size:12px">או הצטרפו לחדר קיים</span>
+        <span class="muted" style="font-size:12px">או חדר פרטי</span>
         <hr style="flex:1;border:none;border-top:1px solid var(--line)">
       </div>
+
+      <button class="btn ghost" onclick="mp_createRoom()">+ צרו חדר עם קוד</button>
       <input id="joinCodeInput" placeholder="קוד חדר" maxlength="4" inputmode="numeric"
         style="text-align:center;font-size:30px;letter-spacing:10px;font-family:var(--disp)"
         oninput="this.value=this.value.replace(/\D/g,'')">
-      <button class="btn ghost" onclick="mp_joinRoomByCode()">הצטרפו ←</button>
+      <button class="btn ghost" onclick="mp_joinRoomByCode()">הצטרפו לחדר ←</button>
     </div>
     <p class="muted" style="text-align:center;font-size:12px;margin-top:14px" id="roomMenuStatus"></p>
   </div>
@@ -1594,12 +1607,12 @@ const MP = {
   myId: (()=>{ let id=localStorage.getItem('mp_id'); if(!id){ id=Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,6); localStorage.setItem('mp_id',id); } return id; })(),
   myName:'', roomCode:null, isHost:false, hostId:null,
   channel:null, presenceList:[], gameState:null, myIdx:-1,
-  songPlayed:false,
+  songPlayed:false, isPublic:false, desiredPlayers:2,
   _challengeTimer:null, _challengeSlot:-1, _challengeBonus:null,
 };
 
 /* lobby seg buttons */
-document.querySelectorAll('#mpSegTarget,#mpSegMode,#mpSegSteal').forEach(seg=>{
+document.querySelectorAll('#mpSegTarget,#mpSegMode,#mpSegSteal,#mpSegQuick').forEach(seg=>{
   seg.addEventListener('click',e=>{
     if(e.target.tagName!=='BUTTON') return;
     seg.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
@@ -1620,7 +1633,7 @@ async function mp_createRoom(){
   const code=String(1000+Math.floor(Math.random()*9000));
   try{
     await sb.from('game_rooms').insert({code,host_id:MP.myId,status:'lobby',state:{phase:'lobby'}});
-    MP.roomCode=code; MP.isHost=true; MP.hostId=MP.myId;
+    MP.roomCode=code; MP.isHost=true; MP.hostId=MP.myId; MP.isPublic=false;
     await mp_subscribe();
     $('lobbyCode').textContent=code;
     $('lobbySetup').style.display='';
@@ -1639,7 +1652,7 @@ async function mp_joinRoomByCode(){
     const {data,error}=await sb.from('game_rooms').select('*').eq('code',code).single();
     if(error||!data){ toast('חדר לא נמצא'); $('roomMenuStatus').textContent=''; return; }
     if(data.status==='finished'){ toast('המשחק הסתיים'); $('roomMenuStatus').textContent=''; return; }
-    MP.roomCode=code; MP.hostId=data.host_id; MP.isHost=MP.myId===data.host_id;
+    MP.roomCode=code; MP.hostId=data.host_id; MP.isHost=MP.myId===data.host_id; MP.isPublic=false;
     await mp_subscribe();
     $('lobbyCode').textContent=code;
     $('lobbySetup').style.display=MP.isHost?'':'none';
@@ -1654,6 +1667,7 @@ async function mp_leaveRoom(){
   if(MP.channel){ try{ await MP.channel.unsubscribe(); }catch(e){} MP.channel=null; }
   MP.roomCode=null; MP.isHost=false; MP.hostId=null; MP.presenceList=[];
   MP.gameState=null; MP.myIdx=-1; MP.songPlayed=false;
+  MP.isPublic=false; MP.desiredPlayers=2;
   stopClip(); go('scrHome');
 }
 
@@ -1693,14 +1707,61 @@ async function mp_checkHostMigration(){
 
 function mp_renderLobbyList(){
   if(!$('scrLobby').classList.contains('active')) return;
+  const n=MP.presenceList.length;
   $('lobbyList').innerHTML=MP.presenceList.map(p=>`
     <div class="lobby-player${p.id===MP.myId?' is-me':''}">
       <div class="lobby-dot"></div>
       <span class="lobby-pname">${p.name||'—'}${p.id===MP.myId?' (אתה)':''}</span>
       ${p.id===MP.hostId?'<span>👑</span>':''}
     </div>`).join('');
-  const n=MP.presenceList.length;
-  $('lobbyStatus').textContent=n<2?'ממתינים לשחקנים נוספים…':n+' שחקנים מחוברים — מוכנים!';
+  if(MP.isPublic){
+    const needed=MP.desiredPlayers;
+    $('lobbyStatus').textContent=n<needed?`ממתין לשחקנים… ${n}/${needed}`:'נמצאו כל השחקנים! מתחיל…';
+    if(n>=needed&&MP.isHost) mp_startGame();
+  } else {
+    $('lobbyStatus').textContent=n<2?'ממתינים לשחקנים נוספים…':n+' שחקנים מחוברים — מוכנים!';
+  }
+}
+
+/* ---------- quick match ---------- */
+async function mp_quickMatch(){
+  if(!mp_nameOk()) return;
+  if(!sb){ toast('אין חיבור לענן'); return; }
+  const desired=+(document.querySelector('#mpSegQuick button.on')?.dataset.v||2);
+  MP.desiredPlayers=desired; MP.isPublic=true;
+  const btn=$('quickMatchBtn');
+  btn.disabled=true; btn.textContent='מחפש…';
+  try{
+    // Find a waiting public room with matching desired_players
+    const {data:rooms}=await sb.from('game_rooms')
+      .select('*').eq('is_public',true).eq('status','lobby')
+      .filter('state->>desired_players','eq',String(desired))
+      .order('created_at',{ascending:true}).limit(10);
+
+    // Join first room that belongs to someone else (not already full)
+    const joinable=(rooms||[]).find(r=>r.host_id!==MP.myId);
+    if(joinable){
+      MP.roomCode=joinable.code; MP.hostId=joinable.host_id; MP.isHost=false;
+      MP.desiredPlayers=joinable.state?.desired_players||desired;
+      await mp_subscribe();
+    } else {
+      // Create a new public waiting room
+      const code=String(1000+Math.floor(Math.random()*9000));
+      await sb.from('game_rooms').insert({code,host_id:MP.myId,is_public:true,status:'lobby',
+        state:{phase:'lobby',desired_players:desired}});
+      MP.roomCode=code; MP.isHost=true; MP.hostId=MP.myId;
+      await mp_subscribe();
+    }
+    $('lobbyCode').textContent=MP.roomCode;
+    $('lobbySetup').style.display='none';
+    $('lobbyStartBtn').style.display='none';
+    go('scrLobby');
+  }catch(e){
+    toast('שגיאה: '+(e.message||e));
+    MP.isPublic=false;
+  }finally{
+    btn.disabled=false; btn.textContent='⚡ מצאו לי שחקן';
+  }
 }
 
 /* ---------- start game (host only) ---------- */
