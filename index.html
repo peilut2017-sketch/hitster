@@ -1706,29 +1706,42 @@ function mp_renderLobbyList(){
 /* ---------- start game (host only) ---------- */
 async function mp_startGame(){
   if(!MP.isHost) return;
-  if(MP.presenceList.length<2){ toast('נדרשים לפחות 2 שחקנים'); return; }
-  const mode=document.querySelector('#mpSegMode button.on')?.dataset.v||'chorus';
-  const target=+(document.querySelector('#mpSegTarget button.on')?.dataset.v)||8;
-  const steal=document.querySelector('#mpSegSteal button.on')?.dataset.v==='1';
-  const introDur=+localStorage.getItem('introDur')||7;
-  const settings={mode,target,steal,introDur};
+  const btn=$('lobbyStartBtn');
+  btn.disabled=true; btn.textContent='מתחיל…';
+  try{
+    // Presence may not have synced yet — fall back to host alone
+    const presence=MP.presenceList.length>0 ? MP.presenceList : [{id:MP.myId,name:MP.myName,joined_at:Date.now()}];
 
-  let pool=catalog.filter(s=>s.is_active&&(s.youtube_id||s.audio_url));
-  if(pool.length<4){ toast('אין מספיק שירים פעילים בקטלוג'); return; }
+    const mode=document.querySelector('#mpSegMode button.on')?.dataset.v||'chorus';
+    const target=+(document.querySelector('#mpSegTarget button.on')?.dataset.v)||8;
+    const steal=document.querySelector('#mpSegSteal button.on')?.dataset.v==='1';
+    const introDur=+localStorage.getItem('introDur')||7;
+    const settings={mode,target,steal,introDur};
 
-  const deck=shuffle(pool).map(s=>({id:s.id,title:s.title,artist:s.artist,album:s.album||'',
-    year:s.year,youtube_id:s.youtube_id||'',start_seconds:s.start_seconds||0,
-    duration_seconds:s.duration_seconds||27,intro_start_seconds:s.intro_start_seconds||0}));
+    let pool=catalog.filter(s=>s.is_active&&(s.youtube_id||s.audio_url));
+    if(pool.length<4) pool=catalog.filter(s=>s.is_active); // fallback: include demo songs
+    if(pool.length<presence.length+2){ toast('אין מספיק שירים בקטלוג — הוסיפו שירים בפאנל הניהול'); btn.disabled=false; btn.textContent='יאללה, מתחילים 🎵'; return; }
 
-  const players=MP.presenceList.map(p=>({id:p.id,name:p.name,tokens:2,timeline:[deck.pop()]}));
-  players.forEach(p=>p.timeline.sort((a,b)=>a.year-b.year));
+    const deck=shuffle(pool).map(s=>({id:s.id,title:s.title,artist:s.artist,album:s.album||'',
+      year:s.year,youtube_id:s.youtube_id||'',start_seconds:s.start_seconds||0,
+      duration_seconds:s.duration_seconds||27,intro_start_seconds:s.intro_start_seconds||0}));
 
-  const state={
-    phase:'placing',settings,turn_idx:0,total_turns:1,
-    current_song:deck.pop(),placed_slot:-1,challenge:null,challenge_pick:false,
-    players,deck,reveal_result:null,bonus_pending:null,prev_phase:null,winner:null
-  };
-  await sb.from('game_rooms').update({status:'playing',state}).eq('code',MP.roomCode);
+    const players=presence.map(p=>({id:p.id,name:p.name||'שחקן',tokens:2,timeline:[deck.pop()].filter(Boolean)}));
+    players.forEach(p=>p.timeline.sort((a,b)=>a.year-b.year));
+
+    const currentSong=deck.pop();
+    if(!currentSong){ toast('הקלף הראשון חסר — נסה שוב'); btn.disabled=false; btn.textContent='יאללה, מתחילים 🎵'; return; }
+
+    const state={
+      phase:'placing',settings,turn_idx:0,total_turns:1,
+      current_song:currentSong,placed_slot:-1,challenge:null,challenge_pick:false,
+      players,deck,reveal_result:null,bonus_pending:null,prev_phase:null,winner:null
+    };
+    await sb.from('game_rooms').update({status:'playing',state}).eq('code',MP.roomCode);
+  }catch(e){
+    toast('שגיאה: '+(e.message||e));
+    btn.disabled=false; btn.textContent='יאללה, מתחילים 🎵';
+  }
 }
 
 /* ---------- state application (all clients) ---------- */
