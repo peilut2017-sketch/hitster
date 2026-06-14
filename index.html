@@ -281,6 +281,25 @@ h1.logo{
   .vinyl.spin,.eq.live i,.slot.armed{animation:none}
   .flip-card{transition:transform .2s}
 }
+
+/* ---------- room menu / lobby ---------- */
+.room-code{font-family:var(--disp);font-size:60px;font-weight:900;letter-spacing:12px;color:var(--gold);text-align:center;padding:18px 0 4px}
+.room-share{text-align:center;font-size:13px;color:var(--muted);margin-bottom:18px}
+.lobby-list{display:flex;flex-direction:column;gap:8px;margin:14px 0}
+.lobby-player{display:flex;align-items:center;gap:12px;background:var(--raised);border:1px solid var(--line);border-radius:12px;padding:12px 16px;transition:border-color .25s}
+.lobby-player.is-me{border-color:rgba(217,180,90,.5)}
+.lobby-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;box-shadow:0 0 6px var(--green)}
+.lobby-pname{flex:1;font-weight:600;font-size:15px}
+/* live bonus guess input */
+.bonus-live{background:var(--raised);border:1px solid rgba(217,180,90,.35);border-radius:14px;padding:14px 16px;margin:10px 0;display:none}
+.bonus-live.show{display:block}
+.bonus-live .bl-hd{font-size:12px;color:var(--gold-dim);font-weight:600;margin-bottom:8px}
+.bonus-live .row{gap:8px}
+/* peer vote */
+.peer-vote{background:var(--raised2);border:1px solid var(--gold-dim);border-radius:16px;padding:16px;margin:14px 0;display:none;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.peer-vote.show{display:flex}
+.peer-vote .pv-by{font-size:12px;color:var(--muted)}
+.peer-vote .pv-guess{font-size:17px;font-weight:700;color:var(--gold-bright)}
 </style>
 </head>
 <body>
@@ -299,7 +318,8 @@ h1.logo{
     <h1 class="logo">ניגון בזמן</h1>
     <p class="tagline">מי מכיר הכי טוב את המוזיקה החסידית?<br>מקמו כל שיר על ציר הזמן — ונצחו.</p>
     <div class="home-actions">
-      <button class="btn" onclick="go('scrSetup')">▶&nbsp; משחק חדש</button>
+      <button class="btn" onclick="go('scrSetup')">▶&nbsp; משחק מקומי</button>
+      <button class="btn ghost" onclick="go('scrRoomMenu')">🌐 משחק ברשת</button>
       <button class="btn ghost" onclick="go('scrHow')">איך משחקים?</button>
     </div>
     <button class="admin-link" onclick="adminGate()">ניהול קטלוג</button>
@@ -372,6 +392,62 @@ h1.logo{
   </div>
 </div>
 
+<!-- ============ ROOM MENU ============ -->
+<div class="screen" id="scrRoomMenu">
+  <div class="wrap">
+    <div class="topbar"><button class="back" onclick="go('scrHome')">→</button><h2>משחק ברשת</h2></div>
+    <div class="field"><label>השם שלך</label><input id="mpNameInput" placeholder="הכניסו שם" maxlength="14"></div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:6px">
+      <button class="btn" onclick="mp_createRoom()">+ צרו חדר חדש</button>
+      <div style="display:flex;align-items:center;gap:10px;margin:2px 0">
+        <hr style="flex:1;border:none;border-top:1px solid var(--line)">
+        <span class="muted" style="font-size:12px">או הצטרפו לחדר קיים</span>
+        <hr style="flex:1;border:none;border-top:1px solid var(--line)">
+      </div>
+      <input id="joinCodeInput" placeholder="קוד חדר" maxlength="4" inputmode="numeric"
+        style="text-align:center;font-size:30px;letter-spacing:10px;font-family:var(--disp)"
+        oninput="this.value=this.value.replace(/\D/g,'')">
+      <button class="btn ghost" onclick="mp_joinRoomByCode()">הצטרפו ←</button>
+    </div>
+    <p class="muted" style="text-align:center;font-size:12px;margin-top:14px" id="roomMenuStatus"></p>
+  </div>
+</div>
+
+<!-- ============ LOBBY ============ -->
+<div class="screen" id="scrLobby">
+  <div class="wrap">
+    <div class="topbar"><button class="back" onclick="mp_leaveRoom()">→</button><h2>חדר המתנה</h2></div>
+    <div class="room-code" id="lobbyCode">----</div>
+    <p class="room-share">שתפו את הקוד עם השחקנים האחרים</p>
+    <div class="lobby-list" id="lobbyList"></div>
+
+    <div id="lobbySetup" style="display:none">
+      <div class="field"><label>יעד ניצחון</label>
+        <div class="seg" id="mpSegTarget">
+          <button data-v="5">מהיר · 5</button>
+          <button data-v="8" class="on">רגיל · 8</button>
+          <button data-v="10">ארוך · 10</button>
+        </div>
+      </div>
+      <div class="field"><label>מצב משחק</label>
+        <div class="seg" id="mpSegMode">
+          <button data-v="chorus" class="on">פזמונים</button>
+          <button data-v="intro">פתיחים 🔥</button>
+        </div>
+      </div>
+      <div class="field"><label>גניבת קלפים</label>
+        <div class="seg" id="mpSegSteal">
+          <button data-v="0" class="on">כבוי</button>
+          <button data-v="1">פעיל</button>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" id="lobbyStartBtn" style="display:none;margin-top:8px" onclick="mp_startGame()">יאללה, מתחילים 🎵</button>
+    <p class="muted" style="text-align:center;font-size:13px;margin-top:14px" id="lobbyStatus">ממתינים לשחקנים…</p>
+  </div>
+</div>
+
 <!-- ============ GAME ============ -->
 <div class="screen" id="scrGame">
   <div class="wrap">
@@ -391,6 +467,13 @@ h1.logo{
       </div>
       <div class="eq" id="eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <div class="play-controls" id="playControls"></div>
+      <div class="bonus-live" id="bonusLive">
+        <div class="bl-hd">💡 ניחוש בונוס — לפני הגילוי</div>
+        <div class="row">
+          <input id="bonusTitle" placeholder="שם השיר" style="flex:1">
+          <input id="bonusArtist" placeholder="אמן" style="flex:1">
+        </div>
+      </div>
     </div>
   </div>
   <div class="tl-zone">
@@ -423,7 +506,16 @@ h1.logo{
         <button class="btn small ghost" style="flex:1" onclick="bonusAnswer(false)">לא</button>
       </div>
     </div>
-    <button class="btn" id="revealNext" style="display:none" onclick="nextTurn()">לתור הבא ←</button>
+    <div class="peer-vote" id="peerVote">
+      <p class="pv-by" id="peerVoteBy">ניחוש:</p>
+      <div class="pv-guess" id="peerVoteGuess"></div>
+      <p class="muted" style="font-size:13px">האם הניחוש נכון?</p>
+      <div class="row" style="gap:10px;width:min(290px,80vw)">
+        <button class="btn small ghost" style="flex:1" onclick="mp_peerVote(true)">כן ✓</button>
+        <button class="btn small ghost" style="flex:1" onclick="mp_peerVote(false)">לא ✗</button>
+      </div>
+    </div>
+    <button class="btn" id="revealNext" style="display:none" onclick="handleNextTurn()">לתור הבא ←</button>
   </div>
 </div>
 
@@ -728,7 +820,9 @@ function sfx(name){
 
 function exitGame(){
   if(!confirm('לצאת מהמשחק הנוכחי?')) return;
-  stopClip(); go('scrHome');
+  stopClip();
+  if(MP.roomCode){ mp_leaveRoom(); return; }
+  go('scrHome');
 }
 
 /* ---------- Supabase + Auth ---------- */
@@ -1016,7 +1110,13 @@ function armSlots(){
   const w=document.querySelector('.vinyl-wrap'); if(w) w.classList.toggle('grabbable', G.listened && !G.challengePick);
 }
 
+function handleNextTurn(){
+  if(MP.roomCode){ if(MP.isHost) mp_nextTurn(); else toast('ממתין למארח…'); return; }
+  nextTurn();
+}
+
 function place(idx){
+  if(MP.roomCode){ mp_clientPlace(idx); return; }
   if(!G.listened) return;
   sfx('place');
   stopClip();
@@ -1487,6 +1587,479 @@ async function updateActiveGames(){
 
 loadYtApi();
 initSupabase();
+
+/* ==================== MULTIPLAYER ==================== */
+
+const MP = {
+  myId: (()=>{ let id=localStorage.getItem('mp_id'); if(!id){ id=Math.random().toString(36).slice(2,10)+Math.random().toString(36).slice(2,6); localStorage.setItem('mp_id',id); } return id; })(),
+  myName:'', roomCode:null, isHost:false, hostId:null,
+  channel:null, presenceList:[], gameState:null, myIdx:-1,
+  songPlayed:false,
+  _challengeTimer:null, _challengeSlot:-1, _challengeBonus:null,
+};
+
+/* lobby seg buttons */
+document.querySelectorAll('#mpSegTarget,#mpSegMode,#mpSegSteal').forEach(seg=>{
+  seg.addEventListener('click',e=>{
+    if(e.target.tagName!=='BUTTON') return;
+    seg.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+    e.target.classList.add('on');
+  });
+});
+
+/* ---------- room creation / joining ---------- */
+function mp_nameOk(){
+  const n=($('mpNameInput').value||'').trim();
+  if(!n){ toast('הכניסו שם קודם'); return ''; }
+  return MP.myName=n;
+}
+
+async function mp_createRoom(){
+  if(!mp_nameOk()) return;
+  if(!sb){ toast('אין חיבור לענן'); return; }
+  const code=String(1000+Math.floor(Math.random()*9000));
+  try{
+    await sb.from('game_rooms').insert({code,host_id:MP.myId,status:'lobby',state:{phase:'lobby'}});
+    MP.roomCode=code; MP.isHost=true; MP.hostId=MP.myId;
+    await mp_subscribe();
+    $('lobbyCode').textContent=code;
+    $('lobbySetup').style.display='';
+    $('lobbyStartBtn').style.display='';
+    go('scrLobby');
+  }catch(e){ toast('שגיאה: '+(e.message||e)); }
+}
+
+async function mp_joinRoomByCode(){
+  if(!mp_nameOk()) return;
+  const code=($('joinCodeInput').value||'').trim();
+  if(!/^\d{4}$/.test(code)){ toast('קוד חדר לא תקין'); return; }
+  if(!sb){ toast('אין חיבור לענן'); return; }
+  $('roomMenuStatus').textContent='מחפש חדר…';
+  try{
+    const {data,error}=await sb.from('game_rooms').select('*').eq('code',code).single();
+    if(error||!data){ toast('חדר לא נמצא'); $('roomMenuStatus').textContent=''; return; }
+    if(data.status==='finished'){ toast('המשחק הסתיים'); $('roomMenuStatus').textContent=''; return; }
+    MP.roomCode=code; MP.hostId=data.host_id; MP.isHost=MP.myId===data.host_id;
+    await mp_subscribe();
+    $('lobbyCode').textContent=code;
+    $('lobbySetup').style.display=MP.isHost?'':'none';
+    $('lobbyStartBtn').style.display=MP.isHost?'':'none';
+    $('roomMenuStatus').textContent='';
+    if(data.status==='playing') mp_applyState(data.state);
+    else go('scrLobby');
+  }catch(e){ toast('שגיאה: '+(e.message||e)); $('roomMenuStatus').textContent=''; }
+}
+
+async function mp_leaveRoom(){
+  if(MP.channel){ try{ await MP.channel.unsubscribe(); }catch(e){} MP.channel=null; }
+  MP.roomCode=null; MP.isHost=false; MP.hostId=null; MP.presenceList=[];
+  MP.gameState=null; MP.myIdx=-1; MP.songPlayed=false;
+  stopClip(); go('scrHome');
+}
+
+/* ---------- realtime subscription ---------- */
+async function mp_subscribe(){
+  if(MP.channel){ try{ await MP.channel.unsubscribe(); }catch(e){} }
+  const code=MP.roomCode;
+  MP.channel=sb.channel('room:'+code,{config:{presence:{key:MP.myId}}});
+  MP.channel
+    .on('presence',{event:'sync'},()=>{
+      const st=MP.channel.presenceState();
+      MP.presenceList=Object.entries(st).map(([id,arr])=>({id,...arr[0]})).sort((a,b)=>(a.joined_at||0)-(b.joined_at||0));
+      mp_renderLobbyList();
+      mp_checkHostMigration();
+    })
+    .on('broadcast',{event:'PLAY_SONG'},({payload})=>mp_onPlaySong(payload))
+    .on('broadcast',{event:'PLACE_CARD'},({payload})=>{ if(MP.isHost) mp_hostReceivePlace(payload); })
+    .on('broadcast',{event:'CHALLENGE_ACCEPT'},({payload})=>{ if(MP.isHost) mp_hostReceiveChallenge(payload); })
+    .on('broadcast',{event:'CHALLENGE_PLACE'},({payload})=>{ if(MP.isHost) mp_hostReceiveChallengePlace(payload); })
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_rooms',filter:'code=eq.'+code},
+      ({new:row})=>mp_applyState(row.state));
+  await MP.channel.subscribe(async(status)=>{
+    if(status==='SUBSCRIBED') await MP.channel.track({name:MP.myName,joined_at:Date.now()});
+  });
+}
+
+async function mp_checkHostMigration(){
+  if(!MP.roomCode||!sb||MP.isHost) return;
+  const hostPresent=MP.presenceList.some(p=>p.id===MP.hostId);
+  if(!hostPresent&&MP.presenceList.length&&MP.presenceList[0].id===MP.myId){
+    MP.isHost=true; MP.hostId=MP.myId;
+    try{ await sb.from('game_rooms').update({host_id:MP.myId}).eq('code',MP.roomCode); }catch(e){}
+    toast('👑 עברת למארח');
+    if($('scrLobby').classList.contains('active')){ $('lobbySetup').style.display=''; $('lobbyStartBtn').style.display=''; }
+  }
+}
+
+function mp_renderLobbyList(){
+  if(!$('scrLobby').classList.contains('active')) return;
+  $('lobbyList').innerHTML=MP.presenceList.map(p=>`
+    <div class="lobby-player${p.id===MP.myId?' is-me':''}">
+      <div class="lobby-dot"></div>
+      <span class="lobby-pname">${p.name||'—'}${p.id===MP.myId?' (אתה)':''}</span>
+      ${p.id===MP.hostId?'<span>👑</span>':''}
+    </div>`).join('');
+  const n=MP.presenceList.length;
+  $('lobbyStatus').textContent=n<2?'ממתינים לשחקנים נוספים…':n+' שחקנים מחוברים — מוכנים!';
+}
+
+/* ---------- start game (host only) ---------- */
+async function mp_startGame(){
+  if(!MP.isHost) return;
+  if(MP.presenceList.length<2){ toast('נדרשים לפחות 2 שחקנים'); return; }
+  const mode=document.querySelector('#mpSegMode button.on')?.dataset.v||'chorus';
+  const target=+(document.querySelector('#mpSegTarget button.on')?.dataset.v)||8;
+  const steal=document.querySelector('#mpSegSteal button.on')?.dataset.v==='1';
+  const introDur=+localStorage.getItem('introDur')||7;
+  const settings={mode,target,steal,introDur};
+
+  let pool=catalog.filter(s=>s.is_active&&(s.youtube_id||s.audio_url));
+  if(pool.length<4){ toast('אין מספיק שירים פעילים בקטלוג'); return; }
+
+  const deck=shuffle(pool).map(s=>({id:s.id,title:s.title,artist:s.artist,album:s.album||'',
+    year:s.year,youtube_id:s.youtube_id||'',start_seconds:s.start_seconds||0,
+    duration_seconds:s.duration_seconds||27,intro_start_seconds:s.intro_start_seconds||0}));
+
+  const players=MP.presenceList.map(p=>({id:p.id,name:p.name,tokens:2,timeline:[deck.pop()]}));
+  players.forEach(p=>p.timeline.sort((a,b)=>a.year-b.year));
+
+  const state={
+    phase:'placing',settings,turn_idx:0,total_turns:1,
+    current_song:deck.pop(),placed_slot:-1,challenge:null,challenge_pick:false,
+    players,deck,reveal_result:null,bonus_pending:null,prev_phase:null,winner:null
+  };
+  await sb.from('game_rooms').update({status:'playing',state}).eq('code',MP.roomCode);
+}
+
+/* ---------- state application (all clients) ---------- */
+function mp_applyState(state){
+  if(!state||state.phase==='lobby') return;
+  MP.gameState=state;
+  G.players=state.players||[];
+  G.turn=state.turn_idx||0;
+  G.current=state.current_song||null;
+  G.deck=[...(state.deck||[])];
+  G.mode=state.settings?.mode||'chorus';
+  G.target=state.settings?.target||8;
+  G.steal=state.settings?.steal||false;
+  G.introDur=state.settings?.introDur||7;
+  G.placedSlot=state.placed_slot??-1;
+  G.challenge=state.challenge||null;
+  G.challengePick=state.challenge_pick||false;
+  G.totalTurns=state.total_turns||1;
+  MP.myIdx=G.players.findIndex(p=>p.id===MP.myId);
+
+  if(!$('scrGame').classList.contains('active')) go('scrGame');
+  $('challengeOverlay').classList.remove('show');
+  $('revealOverlay').classList.remove('show');
+  $('flipCard').classList.remove('flipped');
+  $('verdict').classList.remove('show');
+  $('bonusQ').classList.remove('show');
+  $('peerVote').classList.remove('show');
+  $('revealNext').style.display='none';
+  $('bonusLive').classList.remove('show');
+  MP.songPlayed=false;
+
+  const isMyTurn=MP.myIdx===G.turn;
+  switch(state.phase){
+    case 'placing':      mp_renderGame(isMyTurn); break;
+    case 'challenging':  mp_renderGame(false); mp_showChallengeOverlay(state); break;
+    case 'revealing':
+      if(state.prev_phase==='bonus_vote'){ if(MP.isHost) $('revealNext').style.display='block'; }
+      else mp_doReveal(state);
+      break;
+    case 'bonus_vote':   mp_doReveal(state); setTimeout(()=>mp_showPeerVote(state.bonus_pending),1500); break;
+    case 'finished':
+      const w=state.winner; stopClip();
+      $('winName').textContent=w?.name||'';
+      const wp=G.players.find(p=>p.name===w?.name);
+      $('winStats').textContent=`${wp?.timeline?.length||0} שירים על הציר`;
+      confetti(); go('scrWin');
+      break;
+  }
+}
+
+/* ---------- rendering ---------- */
+function mp_renderGame(isMyTurn){
+  $('playersBar').innerHTML=G.players.map((pl,i)=>`
+    <div class="pchip ${i===G.turn?'turn':''}">
+      <div class="pchip-row">
+        <span class="pname">${pl.name}${pl.id===MP.myId?'★':''}</span>
+        <span class="cnt">${pl.timeline.length}<span class="cnt-of">/${G.target}</span></span>
+        <span class="tok-chip ${pl.tokens?'':'empty'}">⭐ ${pl.tokens}</span>
+      </div>
+      <div class="pchip-prog"><div class="pchip-fill" style="width:${Math.min(100,Math.round(pl.timeline.length/G.target*100))}%"></div></div>
+    </div>`).join('');
+  const round=Math.ceil(G.totalTurns/Math.max(1,G.players.length));
+  if($('roundLabel')) $('roundLabel').textContent='סבב '+(round||1);
+  const cp=G.players[G.turn];
+  $('turnLabel').innerHTML=isMyTurn
+    ?`<b style="color:var(--gold-bright)">התור שלך!</b> · ${G.mode==='intro'?'מצב פתיחים 🔥':'שיר מסתורין'}`
+    :`התור של <b>${cp?.name||''}</b>`;
+  $('playControls').innerHTML=isMyTurn
+    ?`<button class="btn btn-play" onclick="mp_playAndBroadcast()">▶ &nbsp;השמע</button>
+      <button class="btn small ghost" onclick="mp_playAndBroadcast()">↻</button>`
+    :`<button class="btn btn-play ghost" style="opacity:.5" disabled>🎵 ${cp?.name||''} מנגן…</button>`;
+  G.listened=false;
+  mp_renderMyTimeline(false);
+}
+
+function mp_renderMyTimeline(armedSlots){
+  const me=G.players[MP.myIdx]; if(!me) return;
+  const isChPick=G.challengePick&&G.challenge?.pIdx===MP.myIdx;
+  const tl=$('timeline'); tl.innerHTML='';
+  const mkSlot=i=>{
+    const d=document.createElement('button');
+    d.className='slot'+(armedSlots?' armed':''); d.dataset.idx=i; d.textContent='+';
+    if(armedSlots){
+      if(isChPick&&i===G.placedSlot){ d.classList.add('taken'); d.textContent='✕'; }
+      else d.onclick=()=>place(i);
+    }
+    tl.appendChild(d);
+  };
+  mkSlot(0);
+  me.timeline.forEach((s,i)=>{
+    const c=document.createElement('div'); c.className='tcard';
+    c.innerHTML=`<div class="yr">${toHebYear(s.year)}</div><div class="yr-g">${s.year}</div><div class="tt">${s.title}<br>${s.artist}</div>`;
+    tl.appendChild(c); mkSlot(i+1);
+  });
+  $('tlHint').textContent=armedSlots
+    ?(isChPick?'בחרו משבצת אחרת לערעור':'גררו את התקליט או הקישו על +')
+    :(MP.myIdx===G.turn?'השמיעו את השיר קודם':'ציר הזמן שלכם');
+  enableVinylDrag();
+  const wrap=document.querySelector('.vinyl-wrap');
+  if(wrap) wrap.classList.toggle('grabbable',armedSlots&&!isChPick);
+}
+
+/* ---------- audio ---------- */
+async function mp_playAndBroadcast(){
+  if(!G.current) return;
+  sfx('tap');
+  const dur=G.mode==='intro'?(G.introDur||7):(G.current.duration_seconds||27);
+  const start=G.mode==='intro'?(G.current.intro_start_seconds||0):(G.current.start_seconds||0);
+  const playAt=Date.now()+1800;
+  await playClip(G.current,G.mode);
+  if(MP.channel) MP.channel.send({type:'broadcast',event:'PLAY_SONG',
+    payload:{video_id:G.current.youtube_id,start_offset:start,play_at:playAt,dur}});
+  G.listened=true; MP.songPlayed=true;
+  mp_renderMyTimeline(true);
+  $('bonusLive').classList.add('show');
+}
+
+function mp_onPlaySong({video_id,start_offset,play_at,dur}){
+  if(MP.myIdx===G.turn) return;
+  if(!video_id) return;
+  const wait=Math.max(0,play_at-Date.now());
+  loadYtApi().then(()=>{
+    ytPlayer.loadVideoById({videoId:video_id,startSeconds:start_offset});
+    ytPlayer.setVolume(0); ytPlayer.pauseVideo();
+    setTimeout(()=>{ try{ ytPlayer.setVolume(90); ytPlayer.playVideo(); }catch(e){} },wait);
+  });
+  runVisuals(dur);
+  setTimeout(stopClip,wait+dur*1000+500);
+  MP.songPlayed=true;
+}
+
+/* ---------- placement ---------- */
+async function mp_clientPlace(idx){
+  const isChPick=G.challengePick&&G.challenge?.pIdx===MP.myIdx;
+  if(!isChPick&&!MP.songPlayed){ toast('השמיעו את השיר קודם'); return; }
+  sfx('place'); stopClip();
+  const bonusTitle=($('bonusTitle').value||'').trim();
+  const bonusArtist=($('bonusArtist').value||'').trim();
+  $('bonusTitle').value=''; $('bonusArtist').value='';
+  $('bonusLive').classList.remove('show');
+  const bonus={title:bonusTitle,artist:bonusArtist,by_id:MP.myId,by_name:MP.myName};
+
+  if(isChPick){
+    if(idx===G.placedSlot){ toast('בחרו משבצת אחרת'); return; }
+    if(MP.isHost) await mp_hostDoReveal(MP._challengeSlot,idx,MP._challengeBonus);
+    else await MP.channel.send({type:'broadcast',event:'CHALLENGE_PLACE',payload:{slot:idx}});
+    return;
+  }
+  if(MP.isHost) await mp_hostResolve(idx,bonus);
+  else await MP.channel.send({type:'broadcast',event:'PLACE_CARD',payload:{slot:idx,bonus}});
+}
+
+/* ---------- host: receive broadcasts ---------- */
+function mp_hostReceivePlace({slot,bonus}){ mp_hostResolve(slot,bonus); }
+
+async function mp_hostResolve(slot,bonus){
+  const rivals=G.players.map((pl,i)=>({pl,i})).filter(x=>x.i!==G.turn&&x.pl.tokens>=1);
+  if(G.steal&&rivals.length){
+    MP._challengeSlot=slot; MP._challengeBonus=bonus;
+    const ns={...MP.gameState,phase:'challenging',placed_slot:slot};
+    MP.gameState=ns;
+    await sb.from('game_rooms').update({state:ns}).eq('code',MP.roomCode);
+    clearTimeout(MP._challengeTimer);
+    MP._challengeTimer=setTimeout(()=>mp_hostDoReveal(slot,null,bonus),7000);
+  } else {
+    await mp_hostDoReveal(slot,null,bonus);
+  }
+}
+
+function mp_hostReceiveChallenge({pIdx}){
+  if(pIdx<0||pIdx>=G.players.length||G.players[pIdx].tokens<1) return;
+  clearTimeout(MP._challengeTimer);
+  const players=G.players.map(p=>({...p,timeline:[...p.timeline]}));
+  players[pIdx].tokens--;
+  G.players=players; G.challenge={pIdx,slot:null}; G.challengePick=true;
+  const ns={...MP.gameState,phase:'challenging',challenge:{pIdx,slot:null},challenge_pick:true,players};
+  MP.gameState=ns;
+  sb.from('game_rooms').update({state:ns}).eq('code',MP.roomCode);
+}
+
+function mp_hostReceiveChallengePlace({slot}){ mp_hostDoReveal(MP._challengeSlot,slot,MP._challengeBonus); }
+
+async function mp_hostDoReveal(placedSlot,challengeSlot,bonus){
+  clearTimeout(MP._challengeTimer);
+  const s=G.current;
+  const players=G.players.map(p=>({...p,timeline:[...p.timeline]}));
+  const curP=players[G.turn];
+  const okA=fits(curP.timeline,placedSlot,s.year);
+  let ch=null,okC=false;
+  if(challengeSlot!=null&&G.challenge){ ch={pIdx:G.challenge.pIdx,slot:challengeSlot}; okC=fits(players[ch.pIdx].timeline,ch.slot,s.year); }
+  if(okA){ curP.timeline.splice(placedSlot,0,{...s}); }
+  else if(ch&&okC){ players[ch.pIdx].timeline.push({...s}); players[ch.pIdx].timeline.sort((a,b)=>a.year-b.year); }
+  sbStats(s,okA);
+
+  let bonusPending=null,bonusAuto=false;
+  if(okA&&bonus&&(bonus.title||bonus.artist)){
+    const tOk=bonus.title?mp_fuzzyMatch(bonus.title,s.title||''):false;
+    const aOk=bonus.artist?mp_fuzzyMatch(bonus.artist,s.artist||''):false;
+    if(tOk&&aOk){ players[G.turn].tokens++; bonusAuto=true; }
+    else if(bonus.title||bonus.artist){ bonusPending={guess:bonus,by_name:bonus.by_name}; }
+  }
+
+  const winner=players.find(p=>p.timeline.length>=G.target);
+  const phase=bonusPending?'bonus_vote':(winner?'finished':'revealing');
+  const ns={...MP.gameState,phase,placed_slot:placedSlot,challenge:ch,players,current_song:s,
+    reveal_result:{okA,okC,ch,bonus_auto:bonusAuto},bonus_pending:bonusPending,prev_phase:null,
+    winner:winner?{name:winner.name,idx:players.indexOf(winner)}:null};
+  MP.gameState=ns; G.players=players;
+  await sb.from('game_rooms').update({state:ns}).eq('code',MP.roomCode);
+}
+
+/* ---------- challenge overlay (client side) ---------- */
+function mp_showChallengeOverlay(state){
+  if(state.challenge_pick&&state.challenge?.pIdx===MP.myIdx){
+    G.placedSlot=state.placed_slot;
+    mp_renderMyTimeline(true);
+    return;
+  }
+  const me=G.players[MP.myIdx];
+  const canCh=MP.myIdx!==G.turn&&(me?.tokens||0)>0&&!state.challenge_pick;
+  $('challengeBtns').innerHTML=canCh
+    ?`<button class="btn ghost" style="max-width:290px" onclick="mp_sendChallenge()">⭐ ${me.name} מערער!</button>`
+    :(state.challenge_pick?`<p class="muted">${G.players[state.challenge.pIdx]?.name||''} בוחר משבצת…</p>`:'<p class="muted">ממתין לערעורים…</p>');
+  $('challengeOverlay').classList.add('show');
+  if(!state.challenge_pick){
+    clearInterval(challengeTimer);
+    const total=7000,t0=Date.now();
+    challengeTimer=setInterval(()=>{
+      const left=Math.max(0,total-(Date.now()-t0));
+      $('challengeBarFill').style.width=(left/total*100)+'%';
+      if(!left){ clearInterval(challengeTimer); $('challengeOverlay').classList.remove('show'); }
+    },100);
+  }
+}
+
+async function mp_sendChallenge(){
+  clearInterval(challengeTimer);
+  $('challengeOverlay').classList.remove('show');
+  if(MP.isHost) mp_hostReceiveChallenge({pIdx:MP.myIdx});
+  else await MP.channel.send({type:'broadcast',event:'CHALLENGE_ACCEPT',payload:{pIdx:MP.myIdx}});
+}
+
+/* ---------- reveal (client side) ---------- */
+function mp_doReveal(state){
+  const {reveal_result:r,current_song:s,players}=state;
+  if(players) G.players=players;
+  $('rYear').innerHTML=toHebYear(s.year)+'<div class="ryear-g">'+s.year+'</div>';
+  $('rTitle').textContent=s.title;
+  $('rArtist').textContent=s.artist+(s.album?' · '+s.album:'');
+  $('revealOverlay').classList.add('show');
+  setTimeout(()=>{ sfx('card-flip'); $('flipCard').classList.add('flipped'); },350);
+  setTimeout(()=>{
+    const v=$('verdict');
+    if(r.okA){
+      v.textContent=r.ch?'✓ '+G.players[G.turn]?.name+' צדק — הערעור נכשל!':'✓ מיקום מדויק!';
+      v.className='verdict show ok'; confetti(); sfx('correct'); sfx('card-land');
+    } else if(r.ch&&r.okC){
+      v.textContent='⚡ הערעור הצליח!'; v.className='verdict show ok'; confetti(); sfx('correct');
+    } else {
+      v.textContent=r.ch?'✗ שניכם טעיתם':'✗ לא הפעם…'; v.className='verdict show bad'; sfx('wrong');
+    }
+    if(navigator.vibrate) navigator.vibrate(r.okA||r.okC?[30,40,30]:[120]);
+    if(r.bonus_auto) toast('⭐ בונוס אוטומטי — שיר ואמן!');
+    if(state.phase!=='bonus_vote'&&MP.isHost) setTimeout(()=>$('revealNext').style.display='block',800);
+  },1200);
+}
+
+/* ---------- peer vote ---------- */
+function mp_showPeerVote(pending){
+  if(!pending) return;
+  const g=pending.guess;
+  $('peerVoteBy').textContent=(pending.by_name||'שחקן')+' ניחש:';
+  $('peerVoteGuess').textContent=(g.title||'')+(g.title&&g.artist?' · ':'')+(g.artist||'');
+  const btns=$('peerVote').querySelectorAll('button');
+  btns.forEach(b=>b.disabled=!MP.isHost);
+  $('peerVote').classList.add('show');
+}
+
+async function mp_peerVote(yes){
+  if(!MP.isHost) return;
+  $('peerVote').classList.remove('show');
+  const players=G.players.map(p=>({...p,timeline:[...p.timeline]}));
+  if(yes){ players[G.turn].tokens++; sfx('token'); toast('⭐ בונוס אושר'); }
+  const winner=players.find(p=>p.timeline.length>=G.target);
+  const ns={...MP.gameState,phase:winner?'finished':'revealing',prev_phase:'bonus_vote',
+    players,bonus_pending:null,winner:winner?{name:winner.name,idx:players.indexOf(winner)}:null};
+  MP.gameState=ns; G.players=players;
+  await sb.from('game_rooms').update({state:ns}).eq('code',MP.roomCode);
+}
+
+/* ---------- next turn (host only) ---------- */
+async function mp_nextTurn(){
+  if(!MP.isHost) return;
+  const state=MP.gameState;
+  const players=G.players.map(p=>({...p,timeline:[...p.timeline]}));
+  const winner=players.find(p=>p.timeline.length>=G.target);
+  if(winner||!state.deck?.length){
+    const w=winner||[...players].sort((a,b)=>b.timeline.length-a.timeline.length)[0];
+    await sb.from('game_rooms').update({state:{...state,phase:'finished',players,
+      winner:{name:w.name,idx:players.indexOf(w)}}}).eq('code',MP.roomCode);
+    return;
+  }
+  const deck=[...state.deck];
+  const nextSong=deck.pop();
+  const nextIdx=(G.turn+1)%players.length;
+  const ns={phase:'placing',settings:state.settings,turn_idx:nextIdx,total_turns:(state.total_turns||0)+1,
+    current_song:nextSong,placed_slot:-1,challenge:null,challenge_pick:false,
+    players,deck,reveal_result:null,bonus_pending:null,prev_phase:null,winner:null};
+  MP.gameState=ns;
+  await sb.from('game_rooms').update({state:ns}).eq('code',MP.roomCode);
+}
+
+/* ---------- fuzzy match ---------- */
+function mp_normalizeHeb(s){
+  if(!s) return '';
+  s=s.replace(/[ְ-ׇ]/g,'').replace(/[״׳'".,\-–—!?()\[\]]/g,'').trim().toLowerCase();
+  return s.replace(/ך/g,'כ').replace(/ם/g,'מ').replace(/ן/g,'נ').replace(/ף/g,'פ').replace(/ץ/g,'צ').replace(/\s+/g,' ').trim();
+}
+function mp_levenshtein(a,b){
+  if(!a.length) return b.length; if(!b.length) return a.length;
+  const m=a.length,n=b.length,dp=Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i?j?0:j:j));
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+function mp_fuzzyMatch(guess,answer){
+  const g=mp_normalizeHeb(guess),a=mp_normalizeHeb(answer);
+  if(!g||!a) return false;
+  if(g===a) return true;
+  return mp_levenshtein(g,a)/Math.max(g.length,a.length)<=0.3;
+}
 </script>
 </body>
 </html>
