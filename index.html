@@ -1608,7 +1608,7 @@ const MP = {
   myName:'', roomCode:null, isHost:false, hostId:null,
   channel:null, presenceList:[], gameState:null, myIdx:-1,
   songPlayed:false, isPublic:false, desiredPlayers:2,
-  _challengeTimer:null, _challengeSlot:-1, _challengeBonus:null,
+  _challengeTimer:null, _challengeSlot:-1, _challengeBonus:null, _starting:false,
 };
 
 /* lobby seg buttons */
@@ -1687,8 +1687,9 @@ async function mp_subscribe(){
     .on('broadcast',{event:'PLACE_CARD'},({payload})=>{ if(MP.isHost) mp_hostReceivePlace(payload); })
     .on('broadcast',{event:'CHALLENGE_ACCEPT'},({payload})=>{ if(MP.isHost) mp_hostReceiveChallenge(payload); })
     .on('broadcast',{event:'CHALLENGE_PLACE'},({payload})=>{ if(MP.isHost) mp_hostReceiveChallengePlace(payload); })
+    .on('broadcast',{event:'STATE_UPDATE'},({payload})=>{ if(!MP.isHost) mp_applyState(payload); })
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_rooms',filter:'code=eq.'+code},
-      ({new:row})=>mp_applyState(row.state));
+      ({new:row})=>{ if(!MP.isHost) mp_applyState(row.state); });
   await MP.channel.subscribe(async(status)=>{
     if(status==='SUBSCRIBED') await MP.channel.track({name:MP.myName,joined_at:Date.now()});
   });
@@ -1717,7 +1718,7 @@ function mp_renderLobbyList(){
   if(MP.isPublic){
     const needed=MP.desiredPlayers;
     $('lobbyStatus').textContent=n<needed?`ממתין לשחקנים… ${n}/${needed}`:'נמצאו כל השחקנים! מתחיל…';
-    if(n>=needed&&MP.isHost) mp_startGame();
+    if(n>=needed&&MP.isHost&&!MP._starting){ MP._starting=true; mp_startGame(); }
   } else {
     $('lobbyStatus').textContent=n<2?'ממתינים לשחקנים נוספים…':n+' שחקנים מחוברים — מוכנים!';
   }
@@ -1764,6 +1765,14 @@ async function mp_quickMatch(){
   }
 }
 
+/* ---------- host: write state to DB + broadcast to all clients ---------- */
+async function mp_writeState(newState, extra={}){
+  MP.gameState=newState;
+  await sb.from('game_rooms').update({state:newState,...extra}).eq('code',MP.roomCode);
+  if(MP.channel) MP.channel.send({type:'broadcast',event:'STATE_UPDATE',payload:newState});
+  mp_applyState(newState);
+}
+
 /* ---------- start game (host only) ---------- */
 async function mp_startGame(){
   if(!MP.isHost) return;
@@ -1798,9 +1807,10 @@ async function mp_startGame(){
       current_song:currentSong,placed_slot:-1,challenge:null,challenge_pick:false,
       players,deck,reveal_result:null,bonus_pending:null,prev_phase:null,winner:null
     };
-    await sb.from('game_rooms').update({status:'playing',state}).eq('code',MP.roomCode);
+    await mp_writeState(state, {status:'playing'});
   }catch(e){
     toast('שגיאה: '+(e.message||e));
+    MP._starting=false;
     btn.disabled=false; btn.textContent='יאללה, מתחילים 🎵';
   }
 }
@@ -1963,8 +1973,7 @@ async function mp_hostResolve(slot,bonus){
   if(G.steal&&rivals.length){
     MP._challengeSlot=slot; MP._challengeBonus=bonus;
     const ns={...MP.gameState,phase:'challenging',placed_slot:slot};
-    MP.gameState=ns;
-    await sb.from('game_rooms').update({state:ns}).eq('code',MP.roomCode);
+    await mp_writeState(ns);
     clearTimeout(MP._challengeTimer);
     MP._challengeTimer=setTimeout(()=>mp_hostDoReveal(slot,null,bonus),7000);
   } else {
@@ -1979,8 +1988,7 @@ function mp_hostReceiveChallenge({pIdx}){
   players[pIdx].tokens--;
   G.players=players; G.challenge={pIdx,slot:null}; G.challengePick=true;
   const ns={...MP.gameState,phase:'challenging',challenge:{pIdx,slot:null},challenge_pick:true,players};
-  MP.gameState=ns;
-  sb.from('game_rooms').update({state:ns}).eq('code',MP.roomCode);
+  mp_writeState(ns);
 }
 
 function mp_hostReceiveChallengePlace({slot}){ mp_hostDoReveal(MP._challengeSlot,slot,MP._challengeBonus); }
@@ -2010,8 +2018,8 @@ async function mp_hostDoReveal(placedSlot,challengeSlot,bonus){
   const ns={...MP.gameState,phase,placed_slot:placedSlot,challenge:ch,players,current_song:s,
     reveal_result:{okA,okC,ch,bonus_auto:bonusAuto},bonus_pending:bonusPending,prev_phase:null,
     winner:winner?{name:winner.name,idx:players.indexOf(winner)}:null};
-  MP.gameState=ns; G.players=players;
-  await sb.from('game_rooms').update({state:ns}).eq('code',MP.roomCode);
+  G.players=players;
+  await mp_writeState(ns);
 }
 
 /* ---------- challenge overlay (client side) ---------- */
@@ -2089,8 +2097,8 @@ async function mp_peerVote(yes){
   const winner=players.find(p=>p.timeline.length>=G.target);
   const ns={...MP.gameState,phase:winner?'finished':'revealing',prev_phase:'bonus_vote',
     players,bonus_pending:null,winner:winner?{name:winner.name,idx:players.indexOf(winner)}:null};
-  MP.gameState=ns; G.players=players;
-  await sb.from('game_rooms').update({state:ns}).eq('code',MP.roomCode);
+  G.players=players;
+  await mp_writeState(ns);
 }
 
 /* ---------- next turn (host only) ---------- */
@@ -2101,8 +2109,7 @@ async function mp_nextTurn(){
   const winner=players.find(p=>p.timeline.length>=G.target);
   if(winner||!state.deck?.length){
     const w=winner||[...players].sort((a,b)=>b.timeline.length-a.timeline.length)[0];
-    await sb.from('game_rooms').update({state:{...state,phase:'finished',players,
-      winner:{name:w.name,idx:players.indexOf(w)}}}).eq('code',MP.roomCode);
+    await mp_writeState({...state,phase:'finished',players,winner:{name:w.name,idx:players.indexOf(w)}});
     return;
   }
   const deck=[...state.deck];
@@ -2111,8 +2118,7 @@ async function mp_nextTurn(){
   const ns={phase:'placing',settings:state.settings,turn_idx:nextIdx,total_turns:(state.total_turns||0)+1,
     current_song:nextSong,placed_slot:-1,challenge:null,challenge_pick:false,
     players,deck,reveal_result:null,bonus_pending:null,prev_phase:null,winner:null};
-  MP.gameState=ns;
-  await sb.from('game_rooms').update({state:ns}).eq('code',MP.roomCode);
+  await mp_writeState(ns);
 }
 
 /* ---------- fuzzy match ---------- */
