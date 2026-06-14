@@ -88,5 +88,25 @@ $$;
 grant execute on function increment_song_stats(uuid, boolean) to anon;
 
 -- ----------------------------------------------------------------
+-- טבלת חדרים למולטיפלייר
+-- ----------------------------------------------------------------
+create table if not exists game_rooms (
+  code        text primary key,
+  host_id     text not null,
+  is_public   boolean default false,
+  status      text default 'lobby',     -- lobby | playing | finished
+  state       jsonb default '{}',
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
+);
+
+alter table game_rooms enable row level security;
+
+create policy rooms_read   on game_rooms for select using (true);
+create policy rooms_insert on game_rooms for insert with check (true);
+create policy rooms_update on game_rooms for update using (true);
+create policy rooms_delete on game_rooms for delete using (true);
+
+-- ----------------------------------------------------------------
 -- אדמין: Authentication › Users › Add user  (אימייל + סיסמה)
 -- ----------------------------------------------------------------
