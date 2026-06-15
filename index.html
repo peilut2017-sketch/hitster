@@ -8,6 +8,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<meta property="og:title" content="חסידהיט סטאר">
+<meta property="og:description" content="מי מכיר הכי טוב את המוזיקה החסידית? מקמו כל שיר על ציר הזמן — ונצחו.">
+<meta property="og:image" content="logo.png">
 <style>
 :root{
   --bg:#0A0D18;
@@ -68,14 +73,9 @@ input:focus,select:focus{outline:2px solid var(--gold-dim);outline-offset:1px;bo
 .center{text-align:center}
 
 /* ---------- home ---------- */
-#scrHome .wrap{justify-content:center;align-items:center;text-align:center;gap:0;padding-top:48px;padding-bottom:32px}
-.logo-vinyl{width:130px;height:130px;margin-bottom:26px}
-h1.logo{
-  font-family:var(--disp);font-weight:900;font-size:52px;line-height:1.05;
-  background:linear-gradient(180deg,var(--gold-bright) 20%,var(--gold) 80%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-}
-.tagline{color:var(--muted);font-size:16px;margin:10px 0 40px;font-weight:300}
+#scrHome .wrap{justify-content:center;align-items:center;text-align:center;gap:0;padding-top:32px;padding-bottom:32px}
+.logo-img{width:min(260px,74vw);border-radius:18px;margin-bottom:22px;display:block}
+.tagline{color:var(--muted);font-size:16px;margin:0 0 40px;font-weight:300}
 .home-actions{width:100%;display:flex;flex-direction:column;gap:12px}
 .admin-link{margin-top:34px;color:#4A4F63;font-size:13px;padding:8px}
 
@@ -311,15 +311,7 @@ input[type=range].slider::-moz-range-thumb{width:22px;height:22px;border-radius:
 <!-- ============ HOME ============ -->
 <div class="screen active" id="scrHome">
   <div class="wrap">
-    <svg class="logo-vinyl" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="48" fill="#131318"/>
-      <circle cx="50" cy="50" r="44" fill="none" stroke="#1F1F26" stroke-width="1.4"/>
-      <circle cx="50" cy="50" r="38" fill="none" stroke="#1F1F26" stroke-width="1.4"/>
-      <circle cx="50" cy="50" r="32" fill="none" stroke="#1F1F26" stroke-width="1.4"/>
-      <circle cx="50" cy="50" r="17" fill="#D9B45A"/>
-      <text x="50" y="56" text-anchor="middle" font-size="15" font-weight="900" fill="#241B05" font-family="Frank Ruhl Libre,serif">♪</text>
-    </svg>
-    <h1 class="logo">חסידהיט סטאר</h1>
+    <img src="logo.png" alt="חסידהיט סטאר" class="logo-img">
     <p class="tagline">מי מכיר הכי טוב את המוזיקה החסידית?<br>מקמו כל שיר על ציר הזמן — ונצחו.</p>
     <div class="home-actions">
       <button class="btn" onclick="go('scrSetup')">▶&nbsp; משחק מקומי</button>
@@ -601,7 +593,8 @@ input[type=range].slider::-moz-range-thumb{width:22px;height:22px;border-radius:
     <div id="winName"></div>
     <p class="muted" id="winStats"></p>
     <div style="height:14px"></div>
-    <button class="btn" onclick="go('scrSetup')">משחק נוסף</button>
+    <button class="btn" id="winPlayAgain" onclick="go('scrSetup')">משחק נוסף</button>
+    <button class="btn ghost" id="winShare" onclick="shareResults()">📤 שתף תוצאות</button>
     <button class="btn ghost" onclick="go('scrHome')">למסך הבית</button>
   </div>
 </div>
@@ -1163,8 +1156,11 @@ function prepBonusInput(){
   if($('bonusYear')){ $('bonusYear').value=''; $('bonusYear').style.display=G.variant==='expert'?'':'none'; }
   const hd=$('bonusLive').querySelector('.bl-hd');
   if(hd){
+    const p=curPlayer&&curPlayer();
+    const atMax=p&&p.tokens>=G.maxTokens;
     hd.textContent = G.variant==='pro' ? '✍️ רשמו שם שיר + אמן — חובה כדי לשמור את הקלף'
       : G.variant==='expert' ? '✍️ רשמו שם שיר + אמן + שנה — חובה כדי לשמור את הקלף'
+      : atMax ? `⭐ כבר יש לך ${G.maxTokens} אסימונים — לא ניתן לצבור עוד`
       : '💡 נחשו שם שיר + אמן לפני הגילוי וקבלו ⭐';
   }
   $('bonusLive').classList.add('show');
@@ -1240,8 +1236,29 @@ function armSlots(){
   const w=document.querySelector('.vinyl-wrap'); if(w) w.classList.toggle('grabbable', G.listened && !G.challengePick);
 }
 
+let _nextTurnTimer=null;
+function mp_showNextTurnBtn(delay=0){
+  const show=()=>{
+    $('revealNext').style.display='block';
+    let sec=5;
+    const tick=()=>{ $('revealNext').textContent=`לתור הבא ← (${sec})`; };
+    tick();
+    _nextTurnTimer=setInterval(()=>{
+      sec--;
+      if(sec<=0){ clearInterval(_nextTurnTimer); _nextTurnTimer=null; handleNextTurn(); }
+      else tick();
+    },1000);
+  };
+  if(delay) setTimeout(show,delay); else show();
+}
+function mp_clearNextTurnTimer(){
+  if(_nextTurnTimer){ clearInterval(_nextTurnTimer); _nextTurnTimer=null; }
+  $('revealNext').textContent='לתור הבא ←';
+}
+
 function handleNextTurn(){
   if(MP.roomCode){
+    mp_clearNextTurnTimer();
     $('revealNext').style.display='none';
     if(MP.isHost) mp_nextTurn();
     else { if(MP.channel) MP.channel.send({type:'broadcast',event:'NEXT_TURN',payload:{}}); toast('עובר לתור הבא…'); }
@@ -1368,7 +1385,7 @@ function resolveReveal(){
         activeTl.splice(G.placedSlot,0,s);
         v.textContent=ch?'✓ '+p.name+' צדק — הערעור נכשל!':'✓ מיקום מדויק!';
         v.className='verdict show ok'; confetti(); sfx('correct'); sfx('card-land');
-        if(namedSong&&p.tokens<G.maxTokens){ p.tokens++; sfx('token'); toast('⭐ אסימון — זיהיתם שיר ואמן!'); }
+        if(namedSong){ if(p.tokens<G.maxTokens){ p.tokens++; sfx('token'); toast('⭐ אסימון — זיהיתם שיר ואמן!'); } else toast(`⭐ זיהיתם! — אך כבר יש לך ${G.maxTokens} אסימונים`); }
       }
     } else if(ch&&okC){
       const c=G.players[ch.pIdx];
@@ -1467,6 +1484,30 @@ function showWin(w,byDeck){
   $('winName').textContent=w.name;
   $('winStats').textContent=(byDeck?'הקטלוג נגמר! ':'')+`${w.timeline.length} שירים על הציר · ${w.tokens} אסימונים`;
   confetti(); go('scrWin');
+}
+
+function shareResults(){
+  const winnerName=$('winName').textContent||'';
+  const winStats=$('winStats').textContent||'';
+  const winner=G.players.find(p=>p.name===winnerName)||G.players.find(p=>p.timeline&&p.timeline.length>=G.target);
+  const tl=winner?.timeline||G.coopTimeline||[];
+  const lines=[];
+  lines.push(`🏆 ${winnerName} ניצח בחסידהיט סטאר!`);
+  lines.push(`📀 ${winStats}`);
+  if(tl.length){
+    lines.push('');
+    tl.forEach(s=>{
+      const link=s.youtube_id?` ▶ youtu.be/${s.youtube_id}`:'';
+      lines.push(`• ${s.title} — ${s.artist} (${s.year})${link}`);
+    });
+  }
+  lines.push('');
+  lines.push(`🎮 שחקו גם: ${window.location.origin}`);
+  const text=lines.join('\n');
+  if(navigator.share){ navigator.share({title:'חסידהיט סטאר',text}).catch(()=>{}); }
+  else { navigator.clipboard.writeText(text).then(()=>toast('✓ הועתק ללוח!')).catch(()=>{
+    prompt('העתיקו את התוצאות:',text);
+  }); }
 }
 
 /* ---------- סטטיסטיקת משחקים ---------- */
@@ -2056,6 +2097,7 @@ function mp_applyState(state){
   MP.myIdx=G.players.findIndex(p=>p.id===MP.myId);
 
   if(!$('scrGame').classList.contains('active')) go('scrGame');
+  mp_clearNextTurnTimer();
   $('challengeOverlay').classList.remove('show');
   $('revealOverlay').classList.remove('show');
   $('flipCard').classList.remove('flipped');
@@ -2074,7 +2116,7 @@ function mp_applyState(state){
     case 'revealing':
       if(state.prev_phase==='bonus_vote'){
         $('revealOverlay').classList.add('show');
-        setTimeout(()=>$('revealNext').style.display='block',300);
+        mp_showNextTurnBtn(300);
       } else mp_doReveal(state);
       break;
     case 'bonus_vote':   mp_doReveal(state); setTimeout(()=>mp_showPeerVote(state.bonus_pending),1500); break;
@@ -2093,6 +2135,8 @@ function mp_applyState(state){
         $('winStats').textContent=`${wp?.timeline?.length||0} שירים על הציר`;
         confetti();
       }
+      $('winPlayAgain').textContent='סבב נוסף — אותו חדר';
+      $('winPlayAgain').onclick=()=>{ $('revealOverlay').classList.remove('show'); go('scrLobby'); };
       go('scrWin');
       break;
   }
@@ -2119,7 +2163,7 @@ function mp_renderGame(isMyTurn){
       :`DJ: <b>${cp?.name||''}</b>`;
     $('playControls').innerHTML=isMyTurn
       ?`<button class="btn btn-play" onclick="mp_playAndBroadcast()">▶ &nbsp;השמע</button>
-        <button class="btn small ghost" onclick="mp_playAndBroadcast()">↻</button>`
+        <button class="btn small ghost" onclick="mp_replayLocal()">↻</button>`
       :`<button class="btn btn-play ghost" style="opacity:.5" disabled>🎵 ${cp?.name||''} מנגן…</button>`;
     G.listened=false;
     mp_renderMyTimeline(false); return;
@@ -2174,6 +2218,8 @@ function mp_renderMyTimeline(armedSlots){
 }
 
 /* ---------- audio ---------- */
+function mp_replayLocal(){ sfx('tap'); playClip(G.current,G.mode); }
+
 async function mp_playAndBroadcast(){
   if(!G.current) return;
   sfx('tap');
@@ -2354,7 +2400,7 @@ function mp_doReveal(state){
     }
     if(navigator.vibrate) navigator.vibrate(r.okA||r.okC?[30,40,30]:[120]);
     if(r.bonus_auto) toast('⭐ בונוס אוטומטי — שיר ואמן!');
-    if(state.phase!=='bonus_vote') setTimeout(()=>$('revealNext').style.display='block',800);
+    if(state.phase!=='bonus_vote') mp_showNextTurnBtn(800);
   },1200);
 }
 
