@@ -1444,6 +1444,7 @@ function confetti(){
 
 function showCoopWin(){
   stopClip();
+  $('revealOverlay').classList.remove('show');
   $('winName').textContent='הצוות ניצח! 🎉';
   $('winStats').textContent=`${G.coopTimeline.length} קלפים — נשארו ${G.coopTokens} אסימונים`;
   confetti(); go('scrWin');
@@ -1451,6 +1452,7 @@ function showCoopWin(){
 
 function showCoopLose(){
   stopClip();
+  $('revealOverlay').classList.remove('show');
   $('winName').textContent='אוי... הפסדתם';
   $('winStats').textContent=`הגעתם ל-${G.coopTimeline.length} קלפים מתוך ${G.target}`;
   go('scrWin');
@@ -1458,6 +1460,7 @@ function showCoopLose(){
 
 function showWin(w,byDeck){
   stopClip();
+  $('revealOverlay').classList.remove('show');
   sbLogSession({created_at:new Date().toISOString(), players_count:G.players.length,
     mode:G.mode, target:G.target, winner_name:w.name,
     total_placements:G.placed, correct_placements:G.correctPlaced});
