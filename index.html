@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link rel="manifest" href="manifest.json">
 <link rel="icon" href="logo.png">
 <link rel="apple-touch-icon" href="logo.png">
 <meta property="og:title" content="חסידהיט סטאר">
@@ -55,16 +56,15 @@ input:focus,select:focus{outline:2px solid var(--gold-dim);outline-offset:1px;bo
 /* ---------- shared ---------- */
 .btn{
   display:flex;align-items:center;justify-content:center;gap:8px;
-  width:100%;padding:15px;border-radius:14px;font-size:17px;font-weight:700;
-  background:linear-gradient(180deg,var(--gold-bright),var(--gold));
-  color:#241B05;transition:transform .12s ease, box-shadow .12s ease;
-  box-shadow:0 4px 18px rgba(217,180,90,.22);
+  width:100%;padding:14px 20px;border-radius:10px;font-size:16px;font-weight:700;
+  background:var(--gold);color:#1A1200;letter-spacing:.01em;
+  border:2px solid transparent;transition:opacity .12s,transform .1s;
 }
-.btn:active{transform:scale(.97)}
-.btn.ghost{background:var(--raised);color:var(--ink);border:1px solid var(--line);box-shadow:none}
-.btn.small{width:auto;padding:9px 16px;font-size:14px;border-radius:10px}
-.btn.danger{background:var(--raised);color:var(--red);border:1px solid rgba(199,90,80,.35);box-shadow:none}
-.btn:disabled{opacity:.4;pointer-events:none}
+.btn:active{opacity:.8;transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.small{width:auto;padding:9px 16px;font-size:13.5px;border-radius:8px}
+.btn.danger{background:transparent;color:var(--red);border:1.5px solid rgba(199,90,80,.30)}
+.btn:disabled{opacity:.35;pointer-events:none}
 .eyebrow{font-size:12px;letter-spacing:.18em;color:var(--gold-dim);font-weight:700}
 .card-panel{background:var(--raised);border:1px solid var(--line);border-radius:var(--r);padding:18px}
 .row{display:flex;gap:10px;align-items:center}
@@ -305,6 +305,14 @@ input[type=range].slider::-moz-range-thumb{width:22px;height:22px;border-radius:
 .peer-vote .pv-by{font-size:12px;color:var(--muted)}
 .peer-vote .pv-guess{font-size:17px;font-weight:700;color:var(--gold-bright)}
 
+/* ===== emoji reactions ===== */
+.emoji-bar{position:fixed;bottom:90px;left:12px;z-index:45;display:none;flex-direction:column;gap:6px}
+.emoji-bar.show{display:flex}
+.emoji-btn{width:40px;height:40px;border-radius:50%;background:var(--raised);border:1px solid var(--line);font-size:20px;cursor:pointer}
+.emoji-float{position:fixed;z-index:300;font-size:30px;pointer-events:none;animation:floatUp 1.4s ease-out forwards}
+@keyframes floatUp{from{opacity:1;transform:translateY(0) scale(1)}to{opacity:0;transform:translateY(-90px) scale(1.5)}}
+#undoPlace{font-size:13px;padding:7px 14px}
+
 /* ===== theme toggle button ===== */
 .theme-toggle{position:fixed;top:12px;left:12px;z-index:200;width:38px;height:38px;border-radius:50%;
   background:var(--raised);border:1px solid var(--line);font-size:19px;
@@ -353,6 +361,7 @@ body.light .verdict.ok{color:var(--gold)}
     <div class="home-actions">
       <button class="btn" onclick="go('scrSetup')">▶&nbsp; משחק מקומי</button>
       <button class="btn ghost" onclick="go('scrRoomMenu')">🌐 משחק ברשת</button>
+      <button class="btn ghost" onclick="showLeaderboard()">🏆 לוח מנצחים</button>
       <button class="btn ghost" onclick="go('scrHow')">איך משחקים?</button>
     </div>
     <button class="admin-link" onclick="adminGate()">ניהול קטלוג</button>
@@ -460,6 +469,21 @@ body.light .verdict.ok{color:var(--gold)}
       <p class="muted" style="font-size:12.5px;margin-top:6px" id="modeHint">במצב פזמונים מושמעות 27 שניות מהפזמון.</p>
     </div>
 
+    <div class="field">
+      <label>לחץ זמן</label>
+      <div class="seg" id="segTimer">
+        <button data-v="0" class="on">כבוי</button>
+        <button data-v="30">30 שנ׳</button>
+        <button data-v="20">20 שנ׳</button>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin-top:6px">אם הזמן נגמר לפני שמיקמתם — מיקום אקראי</p>
+    </div>
+
+    <div class="field">
+      <label>סינון אמן <span class="muted" style="font-weight:400">(אופציונלי)</span></label>
+      <input id="artistFilter" placeholder="לדוגמה: מרדכי בן דוד" autocomplete="off">
+    </div>
+
     <button class="btn" id="setupStart" onclick="startGame()">יאללה, מתחילים 🎵</button>
   </div>
 </div>
@@ -548,6 +572,7 @@ body.light .verdict.ok{color:var(--gold)}
     <div class="players-bar" id="playersBar"></div>
     <div class="stage">
       <div class="turn-label" id="turnLabel"></div>
+      <div id="pressureTimer" style="display:none;font-size:26px;font-weight:900;font-family:var(--disp);letter-spacing:.02em"></div>
       <div class="vinyl-wrap">
         <div class="progress-ring" id="progressRing"></div>
         <div class="vinyl" id="vinyl">
@@ -606,8 +631,18 @@ body.light .verdict.ok{color:var(--gold)}
         <button class="btn small ghost" style="flex:1" onclick="mp_peerVote(false)">לא ✗</button>
       </div>
     </div>
+    <button id="undoPlace" class="btn ghost small" style="display:none;align-self:flex-start;margin-bottom:10px" onclick="undoPlacement()">✕ ביטול מיקום</button>
     <button class="btn" id="revealNext" style="display:none" onclick="handleNextTurn()">לתור הבא ←</button>
   </div>
+</div>
+
+<!-- emoji reaction bar -->
+<div class="emoji-bar" id="emojiBar">
+  <button class="emoji-btn" onclick="mp_sendReaction('👏')">👏</button>
+  <button class="emoji-btn" onclick="mp_sendReaction('🔥')">🔥</button>
+  <button class="emoji-btn" onclick="mp_sendReaction('😮')">😮</button>
+  <button class="emoji-btn" onclick="mp_sendReaction('😂')">😂</button>
+  <button class="emoji-btn" onclick="mp_sendReaction('🎵')">🎵</button>
 </div>
 
 <!-- ============ CHALLENGE OVERLAY ============ -->
@@ -698,8 +733,22 @@ body.light .verdict.ok{color:var(--gold)}
       <input type="file" id="importFile" accept=".json" style="display:none" onchange="importJSON(event)">
       <input type="file" id="importFlatFile" accept=".csv,.txt,.xlsx" style="display:none" onchange="importFlat(event)">
     </div>
+    <div class="card-panel" style="margin-bottom:16px">
+      <div class="eyebrow" style="margin-bottom:10px">השירים הקשים ביותר</div>
+      <div id="hardSongsContent"><p class="muted" style="font-size:13px">טוען…</p></div>
+    </div>
+
     <input id="adminSearch" placeholder="חיפוש שיר או אמן…" oninput="renderAdmin()" style="margin-bottom:10px">
     <div class="song-list" id="songList"></div>
+    <div style="height:30px"></div>
+  </div>
+</div>
+
+<!-- ============ LEADERBOARD ============ -->
+<div class="screen" id="scrLeaderboard">
+  <div class="wrap">
+    <div class="topbar"><button class="back" onclick="go('scrHome')">→</button><h2>🏆 לוח מנצחים</h2></div>
+    <div id="lboardContent" class="card-panel" style="min-height:120px"></div>
     <div style="height:30px"></div>
   </div>
 </div>
@@ -843,7 +892,7 @@ let sb = null; // supabase client
 const $ = id => document.getElementById(id);
 const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
 function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove('show'),2400); }
-function go(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); if(id==='scrAdmin') renderAdmin(); window.scrollTo(0,0); }
+function go(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); $(id).classList.add('active'); if(id==='scrAdmin') renderAdmin(); if(id!=='scrGame') $('emojiBar')?.classList.remove('show'); window.scrollTo(0,0); }
 function fmtTime(sec){ sec=Math.max(0,Math.round(sec)); return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0'); }
 function parseTime(str){ if(!str) return 0; const p=String(str).trim().split(':'); return p.length===2 ? (+p[0])*60+(+p[1]) : (+p[0]||0); }
 function extractYtId(url){ if(!url) return ''; const m=String(url).match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/); return m ? m[1] : (/^[\w-]{11}$/.test(url.trim()) ? url.trim() : ''); }
@@ -1072,7 +1121,7 @@ addPlayerInput('שחקן 1'); addPlayerInput('שחקן 2');
 
 const G = { players:[], turn:0, deck:[], current:null, target:10, mode:'chorus', listened:false,
   steal:false, placedSlot:-1, challenge:null, challengePick:false, totalTurns:0, introDur:7,
-  variant:'basic', maxTokens:5, coopTimeline:[], coopTokens:0, pendingCard:null, bonusGuess:null };
+  variant:'basic', maxTokens:5, coopTimeline:[], coopTokens:0, pendingCard:null, bonusGuess:null, timePressure:0 };
 
 function startGame(){
   const names=[...$('playerInputs').querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
@@ -1083,12 +1132,15 @@ function startGame(){
   G.steal = G.variant==='coop' ? false : document.querySelector('#segSteal button.on').dataset.v==='1';
   G.maxTokens = 5;
   G.pendingCard = null;
+  G.timePressure = +document.querySelector('#segTimer button.on')?.dataset.v||0;
   const diff = +document.querySelector('#segDiff button.on').dataset.v;
 
   let pool = catalog.filter(s=>s.is_active && (s.youtube_id || s.audio_url));
   if(diff===1) pool=pool.filter(s=>s.difficulty<=1);
   if(diff===3) pool=pool.filter(s=>s.difficulty>=2);
   if(pool.length < names.length + G.target + 4) { pool = catalog.filter(s=>s.is_active && (s.youtube_id || s.audio_url)); }
+  const artistFilt=($('artistFilter')?.value||'').trim();
+  if(artistFilt){ const fp=pool.filter(s=>(s.artist||'').toLowerCase().includes(artistFilt.toLowerCase())||mp_fuzzyMatch(artistFilt,s.artist||'')); if(fp.length>=names.length+3) pool=fp; else return toast(`אין מספיק שירים ל"${artistFilt}" — נסו אמן אחר`); }
   if(pool.length < names.length + 3) return toast('אין מספיק שירים בקטלוג — הוסיפו בפאנל הניהול');
 
   const startTokens = {basic:2, pro:5, expert:3, coop:0}[G.variant]??2;
@@ -1119,7 +1171,7 @@ function nextTurn(first){
   $('verdict').classList.remove('show'); $('bonusQ').classList.remove('show');
   $('bonusLive').classList.remove('show'); G.bonusGuess=null;
   $('revealNext').style.display='none';
-  stopClip();
+  stopClip(); stopPressureTimer();
 
   if(!first){
     if(G.variant==='coop'){
@@ -1184,7 +1236,7 @@ function renderGame(){
   renderTimeline();
 }
 
-function onPlay(){ sfx('tap'); playClip(G.current,G.mode); if(!G.listened){ G.listened=true; armSlots(); prepBonusInput(); } }
+function onPlay(){ sfx('tap'); playClip(G.current,G.mode); if(!G.listened){ G.listened=true; armSlots(); prepBonusInput(); startPressureTimer(); } }
 
 /* show the bonus-guess inputs (title/artist, +year for expert) — used local & online */
 function prepBonusInput(){
@@ -1321,6 +1373,7 @@ function place(idx){
   };
   $('bonusLive').classList.remove('show');
   G.placedSlot=idx;
+  showUndoBtn();
   if(G.variant==='coop'){ return resolveReveal(); }
   const rivals=G.players.map((p,i)=>({p,i})).filter(x=>x.i!==G.turn && x.p.tokens>=1);
   if(G.steal && rivals.length) return openChallenge(rivals);
@@ -1381,7 +1434,7 @@ function resolveReveal(){
   $('rTitle').textContent=s.title;
   $('rArtist').textContent=s.artist+(s.album?' · '+s.album:'');
   $('revealOverlay').classList.add('show');
-  setTimeout(()=>{ sfx('card-flip'); $('flipCard').classList.add('flipped'); },350);
+  setTimeout(()=>{ sfx('card-flip'); $('flipCard').classList.add('flipped'); $('undoPlace').style.display='none'; clearTimeout(_undoTimer); },350);
   setTimeout(()=>{
     const v=$('verdict');
     if(navigator.vibrate) navigator.vibrate(okA||okC?[30,40,30]:[120]);
@@ -1604,7 +1657,7 @@ async function doLogin(){
 }
 
 function renderAdmin(){
-  renderAnalytics(); updateActiveGames(); loadYtApiKey(); loadIntroDur();
+  renderAnalytics(); updateActiveGames(); loadYtApiKey(); loadIntroDur(); renderHardSongs();
   const q=($('adminSearch').value||'').trim();
   const list=catalog.filter(s=>!q||s.title.includes(q)||s.artist.includes(q));
   const active=catalog.filter(s=>s.is_active);
@@ -1967,6 +2020,7 @@ async function mp_subscribe(){
       mp_checkHostMigration();
     })
     .on('broadcast',{event:'PLAY_SONG'},({payload})=>mp_onPlaySong(payload))
+    .on('broadcast',{event:'REACTION'},({payload})=>{ if(payload?.emoji) mp_floatEmoji(payload.emoji); })
     .on('broadcast',{event:'PLACE_CARD'},({payload})=>{ if(MP.isHost) mp_hostReceivePlace(payload); })
     .on('broadcast',{event:'CHALLENGE_ACCEPT'},({payload})=>{ if(MP.isHost) mp_hostReceiveChallenge(payload); })
     .on('broadcast',{event:'CHALLENGE_PLACE'},({payload})=>{ if(MP.isHost) mp_hostReceiveChallengePlace(payload); })
@@ -2148,7 +2202,12 @@ function mp_applyState(state){
 
   const isMyTurn=MP.myIdx===G.turn;
   switch(state.phase){
-    case 'placing':      mp_renderGame(isMyTurn); break;
+    case 'placing':
+      mp_renderGame(isMyTurn);
+      if(isMyTurn && state.current_song?.youtube_id){
+        loadYtApi().then(()=>{ try{ ytPlayer.cueVideoById({videoId:state.current_song.youtube_id,startSeconds:state.current_song.start_seconds||0}); }catch(e){} });
+      }
+      break;
     case 'challenging':  mp_renderGame(false); mp_showChallengeOverlay(state); break;
     case 'revealing':
       if(state.prev_phase==='bonus_vote'){
@@ -2223,6 +2282,7 @@ function mp_renderGame(isMyTurn){
       <button class="btn small ghost" onclick="mp_playAndBroadcast()">↻</button>`
     :`<button class="btn btn-play ghost" style="opacity:.5" disabled>🎵 ${cp?.name||''} מנגן…</button>`;
   G.listened=false;
+  $('emojiBar').classList.toggle('show', !!MP.roomCode);
   mp_renderMyTimeline(false);
 }
 
@@ -2514,11 +2574,134 @@ function mp_levenshtein(a,b){
     dp[i][j]=a[i-1]===b[j-1]?dp[i-1][j-1]:1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
   return dp[m][n];
 }
-function mp_fuzzyMatch(guess,answer){
-  const g=mp_normalizeHeb(guess),a=mp_normalizeHeb(answer);
+const ARTIST_ALIASES={
+  'מרדכי בן דוד':['מבד','mbd','mordechai ben david','mordechai','מרדכי'],
+  'אברהם פריד':['avraham fried','avrohom fried','avremel','אברהם'],
+  'לייפא שמעלצר':['lipa','lipa schmeltzer','ליפא'],
+  'שלמה קרליבך':['shlomo carlebach','carlebach','קרליבך','שלמה'],
+  'יעקב שוואקי':['shwekey','שוואקי','יעקב'],
+  'ברוך לוין':['baruch levine','levine'],
+  'מוטי שטיינמץ':['מוטי','moti steinmetz'],
+  'ישי ריבו':['ישי','ishay ribo'],
+};
+function mp_fuzzyMatch(guess,actual){
+  if(!guess||!actual) return false;
+  const g=mp_normalizeHeb(guess.trim());
+  const a=mp_normalizeHeb(actual.trim());
   if(!g||!a) return false;
-  if(g===a) return true;
+  if(g===a||a.includes(g)||g.includes(a)) return true;
+  for(const [canonical,aliases] of Object.entries(ARTIST_ALIASES)){
+    const cn=mp_normalizeHeb(canonical);
+    const all=[cn,...aliases.map(mp_normalizeHeb)];
+    if(all.some(x=>x===g)&&all.some(x=>x===a)) return true;
+  }
   return mp_levenshtein(g,a)/Math.max(g.length,a.length)<=0.3;
+}
+
+/* ===== leaderboard ===== */
+async function showLeaderboard(){
+  go('scrLeaderboard');
+  $('lboardContent').innerHTML='<p class="muted center" style="padding:24px">טוען…</p>';
+  if(!sb){ $('lboardContent').innerHTML='<p class="muted center" style="padding:24px">לא מחובר לשרת</p>'; return; }
+  try{
+    const {data}=await sb.from('game_sessions')
+      .select('winner_name,total_placements,correct_placements,players_count,created_at')
+      .order('created_at',{ascending:false}).limit(100);
+    if(!data?.length){ $('lboardContent').innerHTML='<p class="muted center" style="padding:24px">אין נתונים עדיין</p>'; return; }
+    const wins={};
+    data.forEach(r=>{ if(r.winner_name) wins[r.winner_name]=(wins[r.winner_name]||0)+1; });
+    const sorted=Object.entries(wins).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    const medals=['🥇','🥈','🥉'];
+    $('lboardContent').innerHTML=`
+      <div class="eyebrow" style="margin-bottom:14px">מנצחים מובילים</div>
+      ${sorted.map(([name,count],i)=>`
+        <div class="row" style="padding:11px 0;border-bottom:1px solid var(--line)">
+          <span style="font-size:22px;width:36px;flex-shrink:0">${medals[i]||'·'}</span>
+          <span style="flex:1;font-weight:600">${name}</span>
+          <span style="color:var(--gold-dim);font-size:13px">${count} ני${count===1?'צחון':'צחונות'}</span>
+        </div>`).join('')}
+      <p class="muted" style="font-size:12px;margin-top:16px;text-align:center">${data.length} משחקים סה"כ</p>`;
+  }catch(e){ $('lboardContent').innerHTML='<p class="muted center" style="padding:24px">שגיאה בטעינה</p>'; }
+}
+
+/* ===== hard songs admin stat ===== */
+async function renderHardSongs(){
+  if(!sb||!$('hardSongsContent')) return;
+  try{
+    const {data}=await sb.from('songs').select('title,artist,year,plays,correct').gt('plays',2).limit(200);
+    if(!data?.length){ $('hardSongsContent').innerHTML='<p class="muted" style="font-size:13px">אין נתונים</p>'; return; }
+    const sorted=[...data].filter(s=>s.plays>2).sort((a,b)=>(a.correct/a.plays)-(b.correct/b.plays)).slice(0,8);
+    $('hardSongsContent').innerHTML=sorted.map(s=>{
+      const pct=Math.round((s.correct/s.plays)*100);
+      const clr=pct<40?'var(--red)':pct<65?'var(--gold)':'var(--green)';
+      return `<div class="row" style="padding:8px 0;border-bottom:1px solid var(--line);font-size:13px">
+        <div style="flex:1"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">${s.title}</div>
+        <div class="muted" style="font-size:11px">${s.artist} · ${s.year} · ${s.plays} משחקים</div></div>
+        <span style="color:${clr};font-weight:700;font-size:15px;flex-shrink:0;margin-right:6px">${pct}%</span>
+      </div>`;
+    }).join('');
+  }catch(e){ $('hardSongsContent').innerHTML='<p class="muted" style="font-size:13px">שגיאה</p>'; }
+}
+
+/* ===== emoji reactions ===== */
+function mp_sendReaction(emoji){
+  if(MP.channel) MP.channel.send({type:'broadcast',event:'REACTION',payload:{emoji,name:MP.myName}});
+  mp_floatEmoji(emoji);
+}
+function mp_floatEmoji(emoji){
+  const el=document.createElement('div');
+  el.className='emoji-float';
+  el.textContent=emoji;
+  el.style.cssText=`left:${20+Math.random()*60}px;bottom:${130+Math.random()*40}px`;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1500);
+}
+
+/* ===== undo placement ===== */
+let _undoData=null, _undoTimer=null;
+function showUndoBtn(){
+  if(MP.roomCode) return;
+  _undoData={slot:G.placedSlot, bonus:G.bonusGuess?{...G.bonusGuess}:null};
+  const btn=$('undoPlace'); if(!btn) return;
+  btn.style.display='block';
+  clearTimeout(_undoTimer);
+  _undoTimer=setTimeout(()=>{ if(btn) btn.style.display='none'; },2200);
+}
+function undoPlacement(){
+  clearTimeout(_undoTimer); _undoTimer=null;
+  $('undoPlace').style.display='none';
+  $('revealOverlay').classList.remove('show');
+  $('flipCard').classList.remove('flipped');
+  G.placedSlot=-1;
+  G.bonusGuess=_undoData?.bonus||null;
+  _undoData=null;
+  $('bonusLive').classList.add('show');
+  sfx('tap');
+}
+
+/* ===== time pressure timer ===== */
+let _pressTimer=null;
+function startPressureTimer(){
+  if(!G.timePressure) return;
+  let left=G.timePressure;
+  const el=$('pressureTimer'); if(!el) return;
+  el.style.display='block';
+  const tick=()=>{ el.textContent=`⏱ ${left}`; el.style.color=left<=8?'var(--red)':left<=15?'var(--gold)':'var(--muted)'; };
+  tick();
+  _pressTimer=setInterval(()=>{
+    left--;
+    if(left<=0){
+      clearInterval(_pressTimer); _pressTimer=null; el.style.display='none';
+      if(G.listened&&G.placedSlot===-1&&!G.challengePick){
+        toast('⏱ הזמן נגמר! מיקום אקראי');
+        place(Math.floor(Math.random()*(curPlayer().timeline.length+1)));
+      }
+    } else tick();
+  },1000);
+}
+function stopPressureTimer(){
+  clearInterval(_pressTimer); _pressTimer=null;
+  const el=$('pressureTimer'); if(el) el.style.display='none';
 }
 
 /* ===== light / dark toggle ===== */
