@@ -88,6 +88,10 @@ h1.logo{
 .seg{display:flex;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
 .seg button{flex:1;padding:10px 6px;border-radius:9px;font-size:14px;font-weight:600;color:var(--muted)}
 .seg button.on{background:var(--raised2);color:var(--gold-bright)}
+.seg.seg-4 button{font-size:12px;padding:9px 4px}
+input[type=range].slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;background:var(--bg2);border:1px solid var(--line);border-radius:3px;outline:none;cursor:pointer;margin:8px 0}
+input[type=range].slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--gold-bright);cursor:pointer}
+input[type=range].slider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--gold-bright);border:none;cursor:pointer}
 .player-inputs{display:flex;flex-direction:column;gap:8px}
 .player-inputs .row input{flex:1}
 .del-player{color:var(--red);font-size:18px;padding:8px}
@@ -330,12 +334,44 @@ h1.logo{
 <div class="screen" id="scrHow">
   <div class="wrap">
     <div class="topbar"><button class="back" onclick="go('scrHome')">→</button><h2>איך משחקים</h2></div>
-    <div class="card-panel" style="display:flex;flex-direction:column;gap:14px;font-size:15px;line-height:1.65">
-      <div><b style="color:var(--gold-bright)">1 · מאזינים.</b><br>בכל תור מתנגן שיר מסתורין — בלי שם ובלי אמן.</div>
-      <div><b style="color:var(--gold-bright)">2 · ממקמים.</b><br>הקישו על משבצת בציר הזמן שלכם: לפני, אחרי או בין השירים שכבר צברתם. לא צריך לדעת שנה מדויקת — רק את הסדר הנכון.</div>
-      <div><b style="color:var(--gold-bright)">3 · חושפים.</b><br>הקלף מתהפך. מיקמתם נכון? הוא נשאר אצלכם. טעיתם? הוא נשרף.</div>
-      <div><b style="color:var(--gold-bright)">4 · בונוס.</b><br>זיהיתם גם את שם השיר והאמן? קבלו אסימון ⭐. שלושה אסימונים שווים קלף מתנה.</div>
-      <div><b style="color:var(--gold-bright)">5 · מנצחים.</b><br>הראשון שממלא את ציר הזמן שלו — לוקח את הכבוד.</div>
+    <div class="card-panel" style="display:flex;flex-direction:column;gap:18px;font-size:15px;line-height:1.65">
+
+      <div style="font-size:17px;font-weight:700;color:var(--gold-bright)">בסיסי — כללי המשחק</div>
+      <div><b style="color:var(--gold-bright)">1 · מאזינים.</b><br>בכל תור מתנגן שיר מסתורין — בלי שם ובלי אמן. 20 שניות לנחש.</div>
+      <div><b style="color:var(--gold-bright)">2 · ממקמים.</b><br>הניחו את הקלף על ציר הזמן שלכם: לפני, אחרי, או בין הקלפים הקיימים. לא צריך לדעת שנה מדויקת — רק את הסדר הנכון.</div>
+      <div><b style="color:var(--gold-bright)">3 · חושפים.</b><br>הקלף מתהפך. צדקתם? הוא נשאר אצלכם. טעיתם? הוא נשרף.</div>
+      <div><b style="color:var(--gold-bright)">4 · בונוס ⭐</b><br>זיהיתם גם את שם השיר ואת האמן לפני החשיפה? קבלו אסימון. מקסימום 5 אסימונים לשחקן.<br><span class="muted" style="font-size:13px">3 אסימונים = קלף מתנה ישירות לציר | אסימון 1 = החלפת שיר</span></div>
+      <div><b style="color:var(--gold-bright)">5 · ערעורים ⭐</b><br>חושבים שיריב מיקם קלף לא נכון? צעקו "היטסטר!" לפני החשיפה, שלמו אסימון, והניחו אותו בפוזיציה שלכם. אם צדקתם — הקלף עובר אליכם!</div>
+      <div><b style="color:var(--gold-bright)">6 · ניצחון.</b><br>הראשון שמגיע ליעד הקלפים שנקבע — מנצח!</div>
+
+      <div style="height:1px;background:var(--line)"></div>
+      <div style="font-size:17px;font-weight:700;color:var(--gold-bright)">פרו — גירסה מאתגרת</div>
+      <div>כמו בסיסי, עם שינויים:<br>
+        • מתחילים עם <b>5 אסימונים</b><br>
+        • חייבים לציין שם שיר + אמן <b>כדי לשמור קלף</b>. לא ידעתם? הקלף נשרף<br>
+        • גם בגניבה — חייבים לציין שם שיר + אמן. הצלחתם? הקלף שלכם ואסימון בחזרה<br>
+        • <b>אי אפשר להרוויח אסימונים חדשים</b>
+      </div>
+
+      <div style="height:1px;background:var(--line)"></div>
+      <div style="font-size:17px;font-weight:700;color:var(--gold-bright)">מומחה — גירסה הקשה ביותר</div>
+      <div>כמו פרו, עם שינויים:<br>
+        • מתחילים עם <b>3 אסימונים</b><br>
+        • חייבים לציין שם שיר + אמן <b>+ שנה מדויקת</b> כדי לשמור קלף<br>
+        • <b>אי אפשר להרוויח אסימונים חדשים</b>
+      </div>
+
+      <div style="height:1px;background:var(--line)"></div>
+      <div style="font-size:17px;font-weight:700;color:var(--gold-bright)">שיתופי — כולם ביחד</div>
+      <div>שחקן לא תחרותי? שחקו כצוות אחד:<br>
+        • ציר זמן אחד משותף לכולם, עם <b>5 אסימונים</b> צוותיים<br>
+        • כל תור שחקן אחר הוא ה-DJ<br>
+        • מיקום נכון? הקלף עולה על ציר הצוות<br>
+        • מיקום שגוי? מאבדים אסימון מהצוות<br>
+        • <b>ניצחון:</b> מגיעים ליעד הקלפים | <b>הפסד:</b> נגמרים האסימונים<br>
+        <span class="muted" style="font-size:13px">טיפ: שנו את מספר האסימונים ויעד הקלפים כדי לכוונן את הקושי</span>
+      </div>
+
     </div>
     <div style="height:30px"></div>
   </div>
@@ -353,24 +389,31 @@ h1.logo{
     </div>
 
     <div class="field">
-      <label>יעד ניצחון</label>
-      <div class="seg" id="segTarget">
-        <button data-v="5">מהיר · 5</button>
-        <button data-v="8" class="on">רגיל · 8</button>
-        <button data-v="10">מלא · 10</button>
-      </div>
+      <label>יעד ניצחון — <span id="targetValDisp">10</span> קלפים</label>
+      <input type="range" id="targetSlider" min="5" max="15" value="10" class="slider" oninput="$('targetValDisp').textContent=this.value">
     </div>
 
     <div class="field">
-      <label>רמת קושי</label>
+      <label>גירסת משחק</label>
+      <div class="seg seg-4" id="segVariant">
+        <button data-v="basic" class="on">בסיסי</button>
+        <button data-v="pro">פרו</button>
+        <button data-v="expert">מומחה</button>
+        <button data-v="coop">שיתופי</button>
+      </div>
+      <p class="muted" style="font-size:12.5px;margin-top:6px" id="variantHint">כללי המשחק הרגילים. מרוויחים אסימון על ניחוש שם השיר והאמן.</p>
+    </div>
+
+    <div class="field">
+      <label>ספריית שירים</label>
       <div class="seg" id="segDiff">
         <button data-v="1">משפחתי</button>
         <button data-v="0" class="on">מעורב</button>
-        <button data-v="3">מומחים</button>
+        <button data-v="3">קשים</button>
       </div>
     </div>
 
-    <div class="field">
+    <div class="field" id="stealField">
       <label>מצב גניבה (ערעורים) ⭐</label>
       <div class="seg" id="segSteal">
         <button data-v="0" class="on">כבוי</button>
@@ -385,7 +428,7 @@ h1.logo{
         <button data-v="chorus" class="on">פזמונים</button>
         <button data-v="intro">פתיחים בלבד 🔥</button>
       </div>
-      <p class="muted" style="font-size:12.5px;margin-top:6px" id="modeHint">במצב פתיחים מושמעות רק השניות הראשונות — אתגר כפול: לזהות וגם למקם.</p>
+      <p class="muted" style="font-size:12.5px;margin-top:6px" id="modeHint">במצב פזמונים מושמעות 27 שניות מהפזמון.</p>
     </div>
 
     <button class="btn" id="setupStart" onclick="startGame()">יאללה, מתחילים 🎵</button>
@@ -435,11 +478,16 @@ h1.logo{
     <div class="lobby-list" id="lobbyList"></div>
 
     <div id="lobbySetup" style="display:none">
-      <div class="field"><label>יעד ניצחון</label>
-        <div class="seg" id="mpSegTarget">
-          <button data-v="5">מהיר · 5</button>
-          <button data-v="8" class="on">רגיל · 8</button>
-          <button data-v="10">ארוך · 10</button>
+      <div class="field">
+        <label>יעד — <span id="mpTargetValDisp">10</span> קלפים</label>
+        <input type="range" id="mpTargetSlider" min="5" max="15" value="10" class="slider" oninput="$('mpTargetValDisp').textContent=this.value">
+      </div>
+      <div class="field"><label>גירסת משחק</label>
+        <div class="seg seg-4" id="mpSegVariant">
+          <button data-v="basic" class="on">בסיסי</button>
+          <button data-v="pro">פרו</button>
+          <button data-v="expert">מומחה</button>
+          <button data-v="coop">שיתופי</button>
         </div>
       </div>
       <div class="field"><label>מצב משחק</label>
@@ -513,7 +561,7 @@ h1.logo{
     </div>
     <div class="verdict" id="verdict"></div>
     <div class="bonus-q" id="bonusQ">
-      <p>⭐ זיהה את שם השיר והאמן לפני החשיפה?</p>
+      <p id="bonusQText">⭐ זיהה את שם השיר והאמן לפני החשיפה?</p>
       <div class="row">
         <button class="btn small ghost" style="flex:1" onclick="bonusAnswer(true)">כן! +אסימון</button>
         <button class="btn small ghost" style="flex:1" onclick="bonusAnswer(false)">לא</button>
@@ -968,6 +1016,17 @@ document.querySelectorAll('.seg').forEach(s=>s.addEventListener('click',e=>{
       : 'במצב פזמונים מושמעות 27 שניות מהפזמון.';
   }
   if(s.id==='segIntroDur') localStorage.setItem('introDur', e.target.dataset.v);
+  if(s.id==='segVariant'){
+    const hints={
+      basic:'כללי המשחק הרגילים. מרוויחים אסימון על ניחוש שם השיר והאמן.',
+      pro:'חייבים לציין שם שיר ואמן כדי לשמור קלף. 5 אסימונים, ללא הרווחת אסימונים חדשים.',
+      expert:'חייבים לציין שם שיר, אמן ושנה מדויקת. 3 אסימונים, ללא הרווחת אסימונים חדשים.',
+      coop:'ציר זמן אחד לכל הצוות. טעות = אסימון פחות. 0 אסימונים = הפסד.'
+    };
+    if($('variantHint')) $('variantHint').textContent=hints[e.target.dataset.v]||'';
+    const isCoop=e.target.dataset.v==='coop';
+    if($('stealField')) $('stealField').style.display=isCoop?'none':'';
+  }
 }));
 
 function addPlayerInput(name=''){
@@ -980,15 +1039,19 @@ function addPlayerInput(name=''){
 }
 addPlayerInput('שחקן 1'); addPlayerInput('שחקן 2');
 
-const G = { players:[], turn:0, deck:[], current:null, target:8, mode:'chorus', listened:false,
-  steal:false, placedSlot:-1, challenge:null, challengePick:false, totalTurns:0, introDur:7 };
+const G = { players:[], turn:0, deck:[], current:null, target:10, mode:'chorus', listened:false,
+  steal:false, placedSlot:-1, challenge:null, challengePick:false, totalTurns:0, introDur:7,
+  variant:'basic', maxTokens:5, coopTimeline:[], coopTokens:0, pendingCard:null };
 
 function startGame(){
   const names=[...$('playerInputs').querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
   if(names.length<1) return toast('הוסיפו לפחות שחקן אחד');
-  G.target = +document.querySelector('#segTarget button.on').dataset.v;
+  G.target = +($('targetSlider')?.value)||10;
+  G.variant = document.querySelector('#segVariant button.on')?.dataset.v||'basic';
   G.mode = document.querySelector('#segMode button.on').dataset.v;
-  G.steal = document.querySelector('#segSteal button.on').dataset.v==='1';
+  G.steal = G.variant==='coop' ? false : document.querySelector('#segSteal button.on').dataset.v==='1';
+  G.maxTokens = 5;
+  G.pendingCard = null;
   const diff = +document.querySelector('#segDiff button.on').dataset.v;
 
   let pool = catalog.filter(s=>s.is_active && (s.youtube_id || s.audio_url));
@@ -997,12 +1060,22 @@ function startGame(){
   if(pool.length < names.length + G.target + 4) { pool = catalog.filter(s=>s.is_active && (s.youtube_id || s.audio_url)); }
   if(pool.length < names.length + 3) return toast('אין מספיק שירים בקטלוג — הוסיפו בפאנל הניהול');
 
+  const startTokens = {basic:2, pro:5, expert:3, coop:0}[G.variant]??2;
   G.placed=0; G.correctPlaced=0; G.totalTurns=0;
   G.introDur = G.mode==='intro' ? (+localStorage.getItem('introDur')||7) : 27;
   G.deck = shuffle(pool);
-  G.players = names.map(n=>({name:n, tokens:2, timeline:[G.deck.pop()]}));
-  G.players.forEach(p=>p.timeline.sort((a,b)=>a.year-b.year));
-  G.turn = -1;
+
+  if(G.variant==='coop'){
+    G.coopTimeline=[G.deck.pop()]; G.coopTimeline.sort((a,b)=>a.year-b.year);
+    G.coopTokens=5;
+    G.players=names.map(n=>({name:n,tokens:0,timeline:[]}));
+  } else {
+    G.coopTimeline=[]; G.coopTokens=0;
+    G.players=names.map(n=>({name:n,tokens:startTokens,timeline:[G.deck.pop()]}));
+    G.players.forEach(p=>p.timeline.sort((a,b)=>a.year-b.year));
+  }
+
+  G.turn=-1;
   go('scrGame');
   nextTurn(true);
 }
@@ -1017,10 +1090,18 @@ function nextTurn(first){
   stopClip();
 
   if(!first){
-    const w=G.players.find(p=>p.timeline.length>=G.target);
-    if(w) return showWin(w);
+    if(G.variant==='coop'){
+      if(G.coopTimeline.length>=G.target) return showCoopWin();
+      if(G.coopTokens<=0) return showCoopLose();
+    } else {
+      const w=G.players.find(p=>p.timeline.length>=G.target);
+      if(w) return showWin(w);
+    }
   }
-  if(!G.deck.length){ const w=[...G.players].sort((a,b)=>b.timeline.length-a.timeline.length)[0]; return showWin(w,true); }
+  if(!G.deck.length){
+    if(G.variant==='coop') return showCoopLose();
+    const w=[...G.players].sort((a,b)=>b.timeline.length-a.timeline.length)[0]; return showWin(w,true);
+  }
 
   G.turn=(G.turn+1)%G.players.length;
   G.totalTurns++;
@@ -1031,6 +1112,26 @@ function nextTurn(first){
 
 function renderGame(){
   const p=curPlayer();
+  const round=Math.ceil(G.totalTurns/Math.max(1,G.players.length));
+  if($('roundLabel')) $('roundLabel').textContent='סבב '+(round||1);
+
+  if(G.variant==='coop'){
+    $('playersBar').innerHTML=`
+      <div class="pchip turn">
+        <div class="pchip-row">
+          <span class="pname">הצוות</span>
+          <span class="cnt">${G.coopTimeline.length}<span class="cnt-of">/${G.target}</span></span>
+          <span class="tok-chip ${G.coopTokens?'':'empty'}">⭐ ${G.coopTokens}</span>
+        </div>
+        <div class="pchip-prog"><div class="pchip-fill" style="width:${Math.min(100,Math.round(G.coopTimeline.length/G.target*100))}%"></div></div>
+      </div>`;
+    $('turnLabel').innerHTML=`DJ: <b>${p.name}</b> · שיתופי`;
+    $('playControls').innerHTML=`
+      <button class="btn btn-play" onclick="onPlay()">▶ &nbsp;השמע</button>
+      <button class="btn small ghost" onclick="playClip(G.current,G.mode)">↻</button>`;
+    renderTimeline(); return;
+  }
+
   $('playersBar').innerHTML = G.players.map((pl,i)=>`
     <div class="pchip ${i===G.turn?'turn':''}">
       <div class="pchip-row">
@@ -1040,12 +1141,11 @@ function renderGame(){
       </div>
       <div class="pchip-prog"><div class="pchip-fill" style="width:${Math.min(100,Math.round(pl.timeline.length/G.target*100))}%"></div></div>
     </div>`).join('');
-  const round=Math.ceil(G.totalTurns/Math.max(1,G.players.length));
-  if($('roundLabel')) $('roundLabel').textContent='סבב '+(round||1);
   $('turnLabel').innerHTML=`התור של <b>${p.name}</b> · ${G.mode==='intro'?'מצב פתיחים 🔥':'שיר מסתורין'}`;
 
-  const tokenBtn = p.tokens>=3 ? `<button class="btn small ghost" onclick="redeemTokens()">⭐3 = קלף מתנה</button>` : '';
-  const swapBtn = (p.tokens>=1 && G.deck.length) ? `<button class="btn small ghost" onclick="swapSong()">🔄 החלף שיר · ⭐1</button>` : '';
+  const noEarn=G.variant==='pro'||G.variant==='expert';
+  const tokenBtn = (!noEarn&&p.tokens>=3) ? `<button class="btn small ghost" onclick="redeemTokens()">⭐3 = קלף מתנה</button>` : '';
+  const swapBtn = (p.tokens>=1&&G.deck.length) ? `<button class="btn small ghost" onclick="swapSong()">🔄 החלף שיר · ⭐1</button>` : '';
   $('playControls').innerHTML=`
     <button class="btn btn-play" onclick="onPlay()">▶ &nbsp;השמע</button>
     <button class="btn small ghost" onclick="playClip(G.current,G.mode)">↻</button> ${swapBtn} ${tokenBtn}`;
@@ -1106,10 +1206,11 @@ function enableVinylDrag(){
 }
 
 function renderTimeline(){
-  const p=curPlayer(), tl=$('timeline'); tl.innerHTML='';
+  const activeTl=G.variant==='coop'?G.coopTimeline:curPlayer().timeline;
+  const tl=$('timeline'); tl.innerHTML='';
   const slot=i=>{ const d=document.createElement('button'); d.className='slot'; d.dataset.idx=i; d.textContent='+'; d.onclick=()=>place(i); tl.appendChild(d); };
   slot(0);
-  p.timeline.forEach((s,i)=>{
+  activeTl.forEach((s,i)=>{
     const c=document.createElement('div'); c.className='tcard';
     c.innerHTML=`<div class="yr">${toHebYear(s.year)}</div><div class="yr-g">${s.year}</div><div class="tt">${s.title}<br>${s.artist}</div>`;
     tl.appendChild(c); slot(i+1);
@@ -1139,6 +1240,7 @@ function place(idx){
     return resolveReveal();
   }
   G.placedSlot=idx;
+  if(G.variant==='coop'){ return resolveReveal(); }
   const rivals=G.players.map((p,i)=>({p,i})).filter(x=>x.i!==G.turn && x.p.tokens>=1);
   if(G.steal && rivals.length) return openChallenge(rivals);
   resolveReveal();
@@ -1182,39 +1284,76 @@ function fits(tl,idx,year){
 }
 
 function resolveReveal(){
-  const p=curPlayer(), tl=p.timeline, s=G.current;
-  const okA = fits(tl,G.placedSlot,s.year);
-  const ch = G.challenge;
-  const okC = ch && ch.slot!==null ? fits(tl,ch.slot,s.year) : false;
+  const s=G.current;
+  const isCoop=G.variant==='coop';
+  const activeTl=isCoop?G.coopTimeline:curPlayer().timeline;
+  const p=isCoop?null:curPlayer();
+
+  const okA=fits(activeTl,G.placedSlot,s.year);
+  const ch=G.challenge;
+  const okC=(!isCoop&&ch&&ch.slot!=null)?fits(activeTl,ch.slot,s.year):false;
 
   s.plays=(s.plays||0)+1; if(okA) s.correct=(s.correct||0)+1; sbStats(s,okA);
   G.placed++; if(okA) G.correctPlaced++;
 
   $('rYear').innerHTML=toHebYear(s.year)+'<div class="ryear-g">'+s.year+'</div>';
   $('rTitle').textContent=s.title;
-  $('rArtist').textContent=s.artist + (s.album?' · '+s.album:'');
+  $('rArtist').textContent=s.artist+(s.album?' · '+s.album:'');
   $('revealOverlay').classList.add('show');
   setTimeout(()=>{ sfx('card-flip'); $('flipCard').classList.add('flipped'); },350);
   setTimeout(()=>{
     const v=$('verdict');
+    if(navigator.vibrate) navigator.vibrate(okA||okC?[30,40,30]:[120]);
+
+    if(isCoop){
+      if(okA){
+        v.textContent='✓ הצוות צדק!'; v.className='verdict show ok';
+        confetti(); sfx('correct'); sfx('card-land');
+        activeTl.splice(G.placedSlot,0,s);
+        if(activeTl.length>=G.target){ setTimeout(()=>showCoopWin(),500); return; }
+      } else {
+        G.coopTokens--;
+        v.textContent=G.coopTokens>0?`✗ לא נכון — נשארו ${G.coopTokens} אסימונים`:'✗ נגמרו האסימונים!';
+        v.className='verdict show bad'; sfx('wrong');
+        if(G.coopTokens<=0){ setTimeout(()=>showCoopLose(),500); return; }
+      }
+      $('revealNext').style.display='block'; return;
+    }
+
     if(okA){
-      v.textContent= ch ? '✓ '+p.name+' צדק — הערעור נכשל!' : '✓ מיקום מדויק!';
-      v.className='verdict show ok';
-      confetti(); sfx('correct'); sfx('card-land'); tl.splice(G.placedSlot,0,s);
-    }else if(ch && okC){
+      v.textContent=ch?'✓ '+p.name+' צדק — הערעור נכשל!':'✓ מיקום מדויק!';
+      v.className='verdict show ok'; confetti(); sfx('correct'); sfx('card-land');
+      if(G.variant==='pro'||G.variant==='expert'){
+        G.pendingCard={card:s,slot:G.placedSlot,isChallenge:false};
+        const q=G.variant==='expert'
+          ?'⭐ ציינו נכון את שם האמן, שם השיר, ואת השנה?'
+          :'⭐ ציינו נכון את שם האמן ושם השיר?';
+        if($('bonusQText')) $('bonusQText').textContent=q;
+      } else {
+        activeTl.splice(G.placedSlot,0,s);
+        if($('bonusQText')) $('bonusQText').textContent='⭐ זיהה את שם השיר והאמן לפני החשיפה?';
+      }
+      $('bonusQ').classList.add('show');
+    } else if(ch&&okC){
       const c=G.players[ch.pIdx];
       v.textContent='⚡ הערעור הצליח! הקלף עובר ל'+c.name;
-      v.className='verdict show ok';
-      confetti(); sfx('correct');
-      c.timeline.push(s); c.timeline.sort((a,b)=>a.year-b.year);
-    }else{
-      v.textContent= ch ? '✗ שניכם טעיתם — הקלף נשרף' : '✗ לא הפעם…';
-      v.className='verdict show bad';
-      sfx('wrong');
+      v.className='verdict show ok'; confetti(); sfx('correct');
+      if(G.variant==='pro'||G.variant==='expert'){
+        G.pendingCard={card:s,isChallenge:true,targetPlayer:ch.pIdx,targetName:c.name};
+        const q=G.variant==='expert'
+          ?`⭐ ${c.name}: ציינו שם האמן, שם השיר, ואת השנה?`
+          :`⭐ ${c.name}: ציינו שם האמן ושם השיר?`;
+        if($('bonusQText')) $('bonusQText').textContent=q;
+        $('bonusQ').classList.add('show');
+      } else {
+        c.timeline.push(s); c.timeline.sort((a,b)=>a.year-b.year);
+        $('revealNext').style.display='block';
+      }
+    } else {
+      v.textContent=ch?'✗ שניכם טעיתם — הקלף נשרף':'✗ לא הפעם…';
+      v.className='verdict show bad'; sfx('wrong');
+      $('revealNext').style.display='block';
     }
-    if(navigator.vibrate) navigator.vibrate(okA||okC?[30,40,30]:[120]);
-    if(okA) $('bonusQ').classList.add('show');
-    else $('revealNext').style.display='block';
   },1200);
 }
 
@@ -1230,9 +1369,29 @@ function swapSong(){
 }
 
 function bonusAnswer(yes){
-  if(yes){ curPlayer().tokens++; sfx('token'); toast('⭐ אסימון ל'+curPlayer().name); }
   $('bonusQ').classList.remove('show');
-  const winner=G.players.find(p=>p.timeline.length>=G.target);
+  const p=curPlayer();
+
+  if(G.variant==='basic'){
+    if(yes && p.tokens<G.maxTokens){ p.tokens++; sfx('token'); toast('⭐ אסימון ל'+p.name); }
+  } else if(G.pendingCard){
+    if(yes){
+      if(G.pendingCard.isChallenge){
+        const c=G.players[G.pendingCard.targetPlayer];
+        c.timeline.push(G.pendingCard.card); c.timeline.sort((a,b)=>a.year-b.year);
+        if(c.tokens<G.maxTokens){ c.tokens++; }
+        sfx('card-land'); toast('⭐ '+G.pendingCard.targetName+' הוכיח — קלף ואסימון!');
+      } else {
+        p.timeline.splice(G.pendingCard.slot,0,G.pendingCard.card);
+        sfx('card-land');
+      }
+    } else {
+      toast('✗ הקלף נשרף — לא הוכחתם את הניחוש');
+    }
+    G.pendingCard=null;
+  }
+
+  const winner=G.players.find(pl=>pl.timeline.length>=G.target);
   if(winner){ setTimeout(()=>showWin(winner),500); return; }
   $('revealNext').style.display='block';
 }
@@ -1252,6 +1411,20 @@ function confetti(){
   for(let i=0;i<36;i++){ const c=document.createElement('div'); c.className='confetti';
     c.style.cssText=`left:${Math.random()*100}vw;background:${colors[i%4]};animation-duration:${1.4+Math.random()*1.4}s;animation-delay:${Math.random()*.4}s`;
     document.body.appendChild(c); setTimeout(()=>c.remove(),3200); }
+}
+
+function showCoopWin(){
+  stopClip();
+  $('winName').textContent='הצוות ניצח! 🎉';
+  $('winStats').textContent=`${G.coopTimeline.length} קלפים — נשארו ${G.coopTokens} אסימונים`;
+  confetti(); go('scrWin');
+}
+
+function showCoopLose(){
+  stopClip();
+  $('winName').textContent='אוי... הפסדתם';
+  $('winStats').textContent=`הגעתם ל-${G.coopTimeline.length} קלפים מתוך ${G.target}`;
+  go('scrWin');
 }
 
 function showWin(w,byDeck){
@@ -1612,7 +1785,7 @@ const MP = {
 };
 
 /* lobby seg buttons */
-document.querySelectorAll('#mpSegTarget,#mpSegMode,#mpSegSteal,#mpSegQuick').forEach(seg=>{
+document.querySelectorAll('#mpSegVariant,#mpSegMode,#mpSegSteal,#mpSegQuick').forEach(seg=>{
   seg.addEventListener('click',e=>{
     if(e.target.tagName!=='BUTTON') return;
     seg.querySelectorAll('button').forEach(b=>b.classList.remove('on'));
@@ -1784,10 +1957,11 @@ async function mp_startGame(){
     const presence=MP.presenceList.length>0 ? MP.presenceList : [{id:MP.myId,name:MP.myName,joined_at:Date.now()}];
 
     const mode=document.querySelector('#mpSegMode button.on')?.dataset.v||'chorus';
-    const target=+(document.querySelector('#mpSegTarget button.on')?.dataset.v)||8;
+    const target=+($('mpTargetSlider')?.value)||10;
     const steal=document.querySelector('#mpSegSteal button.on')?.dataset.v==='1';
+    const variant=document.querySelector('#mpSegVariant button.on')?.dataset.v||'basic';
     const introDur=+localStorage.getItem('introDur')||7;
-    const settings={mode,target,steal,introDur};
+    const settings={mode,target,steal,variant,introDur};
 
     let pool=catalog.filter(s=>s.is_active&&(s.youtube_id||s.audio_url));
     if(pool.length<4) pool=catalog.filter(s=>s.is_active); // fallback: include demo songs
@@ -1797,8 +1971,17 @@ async function mp_startGame(){
       year:s.year,youtube_id:s.youtube_id||'',start_seconds:s.start_seconds||0,
       duration_seconds:s.duration_seconds||27,intro_start_seconds:s.intro_start_seconds||0}));
 
-    const players=presence.map(p=>({id:p.id,name:p.name||'שחקן',tokens:2,timeline:[deck.pop()].filter(Boolean)}));
-    players.forEach(p=>p.timeline.sort((a,b)=>a.year-b.year));
+    const startTokens={basic:2,pro:5,expert:3,coop:0}[variant]??2;
+    let coopTimeline=null,coopTokens=0;
+    if(variant==='coop'){
+      coopTimeline=[deck.pop()]; coopTimeline.sort((a,b)=>a.year-b.year);
+      coopTokens=5;
+    }
+    const players=presence.map(p=>({id:p.id,name:p.name||'שחקן',
+      tokens:variant==='coop'?0:startTokens,
+      timeline:variant==='coop'?[]:[deck.pop()].filter(Boolean)
+    }));
+    if(variant!=='coop') players.forEach(p=>p.timeline.sort((a,b)=>a.year-b.year));
 
     const currentSong=deck.pop();
     if(!currentSong){ toast('הקלף הראשון חסר — נסה שוב'); btn.disabled=false; btn.textContent='יאללה, מתחילים 🎵'; return; }
@@ -1806,7 +1989,8 @@ async function mp_startGame(){
     const state={
       phase:'placing',settings,turn_idx:0,total_turns:1,
       current_song:currentSong,placed_slot:-1,challenge:null,challenge_pick:false,
-      players,deck,reveal_result:null,bonus_pending:null,prev_phase:null,winner:null
+      players,deck,reveal_result:null,bonus_pending:null,prev_phase:null,winner:null,
+      coop_timeline:coopTimeline,coop_tokens:coopTokens
     };
     await mp_writeState(state, {status:'playing'});
   }catch(e){
@@ -1825,9 +2009,13 @@ function mp_applyState(state){
   G.current=state.current_song||null;
   G.deck=[...(state.deck||[])];
   G.mode=state.settings?.mode||'chorus';
-  G.target=state.settings?.target||8;
+  G.target=state.settings?.target||10;
   G.steal=state.settings?.steal||false;
   G.introDur=state.settings?.introDur||7;
+  G.variant=state.settings?.variant||'basic';
+  G.maxTokens=5;
+  G.coopTimeline=state.coop_timeline||[];
+  G.coopTokens=state.coop_tokens??0;
   G.placedSlot=state.placed_slot??-1;
   G.challenge=state.challenge||null;
   G.challengePick=state.challenge_pick||false;
@@ -1858,16 +2046,51 @@ function mp_applyState(state){
     case 'bonus_vote':   mp_doReveal(state); setTimeout(()=>mp_showPeerVote(state.bonus_pending),1500); break;
     case 'finished':
       const w=state.winner; stopClip();
-      $('winName').textContent=w?.name||'';
-      const wp=G.players.find(p=>p.name===w?.name);
-      $('winStats').textContent=`${wp?.timeline?.length||0} שירים על הציר`;
-      confetti(); go('scrWin');
+      if(w?.isLoss){
+        $('winName').textContent='אוי... הפסדתם';
+        $('winStats').textContent=`הגעתם ל-${G.coopTimeline.length} קלפים מתוך ${G.target}`;
+      } else if(w?.isTeam){
+        $('winName').textContent='הצוות ניצח! 🎉';
+        $('winStats').textContent=`${G.coopTimeline.length} קלפים — נשארו ${G.coopTokens} אסימונים`;
+        confetti();
+      } else {
+        $('winName').textContent=w?.name||'';
+        const wp=G.players.find(p=>p.name===w?.name);
+        $('winStats').textContent=`${wp?.timeline?.length||0} שירים על הציר`;
+        confetti();
+      }
+      go('scrWin');
       break;
   }
 }
 
 /* ---------- rendering ---------- */
 function mp_renderGame(isMyTurn){
+  const round=Math.ceil(G.totalTurns/Math.max(1,G.players.length));
+  if($('roundLabel')) $('roundLabel').textContent='סבב '+(round||1);
+  const cp=G.players[G.turn];
+
+  if(G.variant==='coop'){
+    $('playersBar').innerHTML=`
+      <div class="pchip turn">
+        <div class="pchip-row">
+          <span class="pname">הצוות</span>
+          <span class="cnt">${G.coopTimeline.length}<span class="cnt-of">/${G.target}</span></span>
+          <span class="tok-chip ${G.coopTokens?'':'empty'}">⭐ ${G.coopTokens}</span>
+        </div>
+        <div class="pchip-prog"><div class="pchip-fill" style="width:${Math.min(100,Math.round(G.coopTimeline.length/G.target*100))}%"></div></div>
+      </div>`;
+    $('turnLabel').innerHTML=isMyTurn
+      ?`<b style="color:var(--gold-bright)">DJ: אתה!</b> · שיתופי`
+      :`DJ: <b>${cp?.name||''}</b>`;
+    $('playControls').innerHTML=isMyTurn
+      ?`<button class="btn btn-play" onclick="mp_playAndBroadcast()">▶ &nbsp;השמע</button>
+        <button class="btn small ghost" onclick="mp_playAndBroadcast()">↻</button>`
+      :`<button class="btn btn-play ghost" style="opacity:.5" disabled>🎵 ${cp?.name||''} מנגן…</button>`;
+    G.listened=false;
+    mp_renderMyTimeline(false); return;
+  }
+
   $('playersBar').innerHTML=G.players.map((pl,i)=>`
     <div class="pchip ${i===G.turn?'turn':''}">
       <div class="pchip-row">
@@ -1877,9 +2100,6 @@ function mp_renderGame(isMyTurn){
       </div>
       <div class="pchip-prog"><div class="pchip-fill" style="width:${Math.min(100,Math.round(pl.timeline.length/G.target*100))}%"></div></div>
     </div>`).join('');
-  const round=Math.ceil(G.totalTurns/Math.max(1,G.players.length));
-  if($('roundLabel')) $('roundLabel').textContent='סבב '+(round||1);
-  const cp=G.players[G.turn];
   $('turnLabel').innerHTML=isMyTurn
     ?`<b style="color:var(--gold-bright)">התור שלך!</b> · ${G.mode==='intro'?'מצב פתיחים 🔥':'שיר מסתורין'}`
     :`התור של <b>${cp?.name||''}</b>`;
@@ -1905,7 +2125,8 @@ function mp_renderMyTimeline(armedSlots){
     tl.appendChild(d);
   };
   mkSlot(0);
-  me.timeline.forEach((s,i)=>{
+  const myTl=G.variant==='coop'?G.coopTimeline:(me?.timeline||[]);
+  myTl.forEach((s,i)=>{
     const c=document.createElement('div'); c.className='tcard';
     c.innerHTML=`<div class="yr">${toHebYear(s.year)}</div><div class="yr-g">${s.year}</div><div class="tt">${s.title}<br>${s.artist}</div>`;
     tl.appendChild(c); mkSlot(i+1);
@@ -2004,15 +2225,36 @@ async function mp_hostDoReveal(placedSlot,challengeSlot,bonus){
   const okA=fits(curP.timeline,placedSlot,s.year);
   let ch=null,okC=false;
   if(challengeSlot!=null&&G.challenge){ ch={pIdx:G.challenge.pIdx,slot:challengeSlot}; okC=fits(players[ch.pIdx].timeline,ch.slot,s.year); }
-  if(okA){ curP.timeline.splice(placedSlot,0,{...s}); }
+  const variant=MP.gameState.settings?.variant||'basic';
+  if(variant==='coop'){
+    const coopTl=[...(MP.gameState.coop_timeline||[])];
+    let coopTk=MP.gameState.coop_tokens??0;
+    if(okA){ coopTl.splice(placedSlot,0,{...s}); }
+    else { coopTk=Math.max(0,coopTk-1); }
+    sbStats(s,okA);
+    const won=coopTl.length>=(MP.gameState.settings?.target||10);
+    const lost=coopTk<=0&&!okA;
+    const ns={...MP.gameState,phase:won||lost?'finished':'revealing',
+      placed_slot:placedSlot,challenge:null,coop_timeline:coopTl,coop_tokens:coopTk,
+      reveal_result:{okA,okC:false,ch:null,bonus_auto:false},bonus_pending:null,prev_phase:null,
+      winner:won?{name:'הצוות',isTeam:true}:(lost?{name:'הפסד',isLoss:true}:null)};
+    G.players=players; await mp_writeState(ns); return;
+  }
+  if(okA&&(variant==='pro'||variant==='expert')){
+    const tOk=bonus?.title?mp_fuzzyMatch(bonus.title,s.title||''):false;
+    const aOk=bonus?.artist?mp_fuzzyMatch(bonus.artist,s.artist||''):false;
+    const yOk=variant!=='expert'||(bonus?.year&&Math.abs(parseInt(bonus.year)-s.year)<=2);
+    if(tOk&&aOk&&yOk){ curP.timeline.splice(placedSlot,0,{...s}); }
+    // If not: card is discarded (not added)
+  } else if(okA){ curP.timeline.splice(placedSlot,0,{...s}); }
   else if(ch&&okC){ players[ch.pIdx].timeline.push({...s}); players[ch.pIdx].timeline.sort((a,b)=>a.year-b.year); }
   sbStats(s,okA);
 
   let bonusPending=null,bonusAuto=false;
-  if(okA&&bonus&&(bonus.title||bonus.artist)){
+  if(variant==='basic'&&okA&&bonus&&(bonus.title||bonus.artist)){
     const tOk=bonus.title?mp_fuzzyMatch(bonus.title,s.title||''):false;
     const aOk=bonus.artist?mp_fuzzyMatch(bonus.artist,s.artist||''):false;
-    if(tOk&&aOk){ players[G.turn].tokens++; bonusAuto=true; }
+    if(tOk&&aOk&&players[G.turn].tokens<5){ players[G.turn].tokens++; bonusAuto=true; }
     else if(bonus.title||bonus.artist){ bonusPending={guess:bonus,by_name:bonus.by_name}; }
   }
 
