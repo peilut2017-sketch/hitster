@@ -304,9 +304,46 @@ input[type=range].slider::-moz-range-thumb{width:22px;height:22px;border-radius:
 .peer-vote.show{display:flex}
 .peer-vote .pv-by{font-size:12px;color:var(--muted)}
 .peer-vote .pv-guess{font-size:17px;font-weight:700;color:var(--gold-bright)}
+
+/* ===== theme toggle button ===== */
+.theme-toggle{position:fixed;top:12px;left:12px;z-index:200;width:38px;height:38px;border-radius:50%;
+  background:var(--raised);border:1px solid var(--line);font-size:19px;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);transition:background .25s,border-color .25s;cursor:pointer}
+
+/* ===== light theme ===== */
+body.light{
+  --bg:#F0EBE0;
+  --bg2:#E4DDD1;
+  --raised:#FFFFFF;
+  --raised2:#F6F1E8;
+  --line:rgba(150,110,20,.18);
+  --gold:#8B6B18;
+  --gold-bright:#6E5010;
+  --gold-dim:rgba(140,108,28,.60);
+  --ink:#1A1815;
+  --muted:#6A6358;
+  --red:#B03A30;
+  --green:#3E7030;
+  background-image:radial-gradient(1200px 600px at 50% -10%,rgba(217,180,90,.12),transparent 60%);
+}
+body.light input,body.light select,body.light textarea{background:var(--bg2);color:var(--ink)}
+body.light ::placeholder{color:#AAA49C}
+body.light .admin-link{color:#A09890}
+body.light .tl-zone{background:linear-gradient(180deg,transparent,rgba(224,218,206,.97) 22%)}
+body.light .overlay{background:rgba(240,234,224,.95)}
+body.light .face.back{background:linear-gradient(165deg,#D8D0C0,var(--raised))}
+body.light #winName{color:var(--gold)}
+body.light .slot{border-color:rgba(150,110,20,.28)}
+body.light .slot.armed:active{background:rgba(150,110,20,.10)}
+body.light .pchip-prog{background:rgba(150,110,20,.12)}
+body.light .btn.ghost{background:var(--raised)}
+body.light .vinyl-q{color:rgba(26,24,21,.06)}
+body.light .verdict.ok{color:var(--gold)}
 </style>
 </head>
 <body>
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="תצוגה בהירה / כהה">☀️</button>
 
 <!-- ============ HOME ============ -->
 <div class="screen active" id="scrHome">
@@ -2483,6 +2520,19 @@ function mp_fuzzyMatch(guess,answer){
   if(g===a) return true;
   return mp_levenshtein(g,a)/Math.max(g.length,a.length)<=0.3;
 }
+
+/* ===== light / dark toggle ===== */
+function toggleTheme(){
+  const light=document.body.classList.toggle('light');
+  $('themeToggle').textContent=light?'🌙':'☀️';
+  localStorage.setItem('hitster_theme',light?'light':'dark');
+}
+(function(){
+  if(localStorage.getItem('hitster_theme')==='light'){
+    document.body.classList.add('light');
+    const btn=$('themeToggle'); if(btn) btn.textContent='🌙';
+  }
+})();
 </script>
 </body>
 </html>
