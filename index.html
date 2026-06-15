@@ -1373,6 +1373,7 @@ function place(idx){
   };
   $('bonusLive').classList.remove('show');
   G.placedSlot=idx;
+  stopPressureTimer();
   showUndoBtn();
   if(G.variant==='coop'){ return resolveReveal(); }
   const rivals=G.players.map((p,i)=>({p,i})).filter(x=>x.i!==G.turn && x.p.tokens>=1);
@@ -2279,7 +2280,7 @@ function mp_renderGame(isMyTurn){
     :`התור של <b>${cp?.name||''}</b>`;
   $('playControls').innerHTML=isMyTurn
     ?`<button class="btn btn-play" onclick="mp_playAndBroadcast()">▶ &nbsp;השמע</button>
-      <button class="btn small ghost" onclick="mp_playAndBroadcast()">↻</button>`
+      <button class="btn small ghost" onclick="mp_replayLocal()">↻</button>`
     :`<button class="btn btn-play ghost" style="opacity:.5" disabled>🎵 ${cp?.name||''} מנגן…</button>`;
   G.listened=false;
   $('emojiBar').classList.toggle('show', !!MP.roomCode);
@@ -2589,7 +2590,8 @@ function mp_fuzzyMatch(guess,actual){
   const g=mp_normalizeHeb(guess.trim());
   const a=mp_normalizeHeb(actual.trim());
   if(!g||!a) return false;
-  if(g===a||a.includes(g)||g.includes(a)) return true;
+  if(g===a) return true;
+  if(g.length>=3 && a.length>=3 && (a.includes(g)||g.includes(a))) return true;
   for(const [canonical,aliases] of Object.entries(ARTIST_ALIASES)){
     const cn=mp_normalizeHeb(canonical);
     const all=[cn,...aliases.map(mp_normalizeHeb)];
@@ -2612,12 +2614,13 @@ async function showLeaderboard(){
     data.forEach(r=>{ if(r.winner_name) wins[r.winner_name]=(wins[r.winner_name]||0)+1; });
     const sorted=Object.entries(wins).sort((a,b)=>b[1]-a[1]).slice(0,10);
     const medals=['🥇','🥈','🥉'];
+    const escHtml=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     $('lboardContent').innerHTML=`
       <div class="eyebrow" style="margin-bottom:14px">מנצחים מובילים</div>
       ${sorted.map(([name,count],i)=>`
         <div class="row" style="padding:11px 0;border-bottom:1px solid var(--line)">
           <span style="font-size:22px;width:36px;flex-shrink:0">${medals[i]||'·'}</span>
-          <span style="flex:1;font-weight:600">${name}</span>
+          <span style="flex:1;font-weight:600">${escHtml(name)}</span>
           <span style="color:var(--gold-dim);font-size:13px">${count} ני${count===1?'צחון':'צחונות'}</span>
         </div>`).join('')}
       <p class="muted" style="font-size:12px;margin-top:16px;text-align:center">${data.length} משחקים סה"כ</p>`;
@@ -2625,8 +2628,10 @@ async function showLeaderboard(){
 }
 
 /* ===== hard songs admin stat ===== */
+let _hardSongsBusy=false;
 async function renderHardSongs(){
-  if(!sb||!$('hardSongsContent')) return;
+  if(!sb||!$('hardSongsContent')||_hardSongsBusy) return;
+  _hardSongsBusy=true;
   try{
     const {data}=await sb.from('songs').select('title,artist,year,plays,correct').gt('plays',2).limit(200);
     if(!data?.length){ $('hardSongsContent').innerHTML='<p class="muted" style="font-size:13px">אין נתונים</p>'; return; }
@@ -2641,6 +2646,7 @@ async function renderHardSongs(){
       </div>`;
     }).join('');
   }catch(e){ $('hardSongsContent').innerHTML='<p class="muted" style="font-size:13px">שגיאה</p>'; }
+  finally{ _hardSongsBusy=false; }
 }
 
 /* ===== emoji reactions ===== */
@@ -2669,6 +2675,7 @@ function showUndoBtn(){
 }
 function undoPlacement(){
   clearTimeout(_undoTimer); _undoTimer=null;
+  stopPressureTimer();
   $('undoPlace').style.display='none';
   $('revealOverlay').classList.remove('show');
   $('flipCard').classList.remove('flipped');
