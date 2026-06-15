@@ -8,6 +8,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link rel="icon" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<meta property="og:title" content="חסידהיט סטאר">
+<meta property="og:description" content="מי מכיר הכי טוב את המוזיקה החסידית? מקמו כל שיר על ציר הזמן — ונצחו.">
+<meta property="og:image" content="logo.png">
 <style>
 :root{
   --bg:#0A0D18;
@@ -68,14 +73,9 @@ input:focus,select:focus{outline:2px solid var(--gold-dim);outline-offset:1px;bo
 .center{text-align:center}
 
 /* ---------- home ---------- */
-#scrHome .wrap{justify-content:center;align-items:center;text-align:center;gap:0;padding-top:48px;padding-bottom:32px}
-.logo-vinyl{width:130px;height:130px;margin-bottom:26px}
-h1.logo{
-  font-family:var(--disp);font-weight:900;font-size:52px;line-height:1.05;
-  background:linear-gradient(180deg,var(--gold-bright) 20%,var(--gold) 80%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-}
-.tagline{color:var(--muted);font-size:16px;margin:10px 0 40px;font-weight:300}
+#scrHome .wrap{justify-content:center;align-items:center;text-align:center;gap:0;padding-top:32px;padding-bottom:32px}
+.logo-img{width:min(260px,74vw);border-radius:18px;margin-bottom:22px;display:block}
+.tagline{color:var(--muted);font-size:16px;margin:0 0 40px;font-weight:300}
 .home-actions{width:100%;display:flex;flex-direction:column;gap:12px}
 .admin-link{margin-top:34px;color:#4A4F63;font-size:13px;padding:8px}
 
@@ -311,15 +311,7 @@ input[type=range].slider::-moz-range-thumb{width:22px;height:22px;border-radius:
 <!-- ============ HOME ============ -->
 <div class="screen active" id="scrHome">
   <div class="wrap">
-    <svg class="logo-vinyl" viewBox="0 0 100 100">
-      <circle cx="50" cy="50" r="48" fill="#131318"/>
-      <circle cx="50" cy="50" r="44" fill="none" stroke="#1F1F26" stroke-width="1.4"/>
-      <circle cx="50" cy="50" r="38" fill="none" stroke="#1F1F26" stroke-width="1.4"/>
-      <circle cx="50" cy="50" r="32" fill="none" stroke="#1F1F26" stroke-width="1.4"/>
-      <circle cx="50" cy="50" r="17" fill="#D9B45A"/>
-      <text x="50" y="56" text-anchor="middle" font-size="15" font-weight="900" fill="#241B05" font-family="Frank Ruhl Libre,serif">♪</text>
-    </svg>
-    <h1 class="logo">חסידהיט סטאר</h1>
+    <img src="logo.png" alt="חסידהיט סטאר" class="logo-img">
     <p class="tagline">מי מכיר הכי טוב את המוזיקה החסידית?<br>מקמו כל שיר על ציר הזמן — ונצחו.</p>
     <div class="home-actions">
       <button class="btn" onclick="go('scrSetup')">▶&nbsp; משחק מקומי</button>
