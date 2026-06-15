@@ -2711,10 +2711,10 @@ function toggleTheme(){
   localStorage.setItem('hitster_theme',light?'light':'dark');
 }
 (function(){
-  if(localStorage.getItem('hitster_theme')==='light'){
-    document.body.classList.add('light');
-    const btn=$('themeToggle'); if(btn) btn.textContent='🌙';
-  }
+  const saved=localStorage.getItem('hitster_theme');
+  const light=saved?saved==='light':window.matchMedia('(prefers-color-scheme: light)').matches;
+  if(light){ document.body.classList.add('light'); }
+  const btn=$('themeToggle'); if(btn) btn.textContent=light?'🌙':'☀️';
 })();
 </script>
 </body>
