@@ -533,6 +533,7 @@ input[type=range].slider::-moz-range-thumb{width:22px;height:22px;border-radius:
         <div class="row">
           <input id="bonusTitle" placeholder="שם השיר" style="flex:1">
           <input id="bonusArtist" placeholder="אמן" style="flex:1">
+          <input id="bonusYear" placeholder="שנה" inputmode="numeric" style="flex:1;display:none">
         </div>
       </div>
     </div>
@@ -1041,7 +1042,7 @@ addPlayerInput('שחקן 1'); addPlayerInput('שחקן 2');
 
 const G = { players:[], turn:0, deck:[], current:null, target:10, mode:'chorus', listened:false,
   steal:false, placedSlot:-1, challenge:null, challengePick:false, totalTurns:0, introDur:7,
-  variant:'basic', maxTokens:5, coopTimeline:[], coopTokens:0, pendingCard:null };
+  variant:'basic', maxTokens:5, coopTimeline:[], coopTokens:0, pendingCard:null, bonusGuess:null };
 
 function startGame(){
   const names=[...$('playerInputs').querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
@@ -1086,6 +1087,7 @@ function nextTurn(first){
   $('revealOverlay').classList.remove('show');
   $('flipCard').classList.remove('flipped');
   $('verdict').classList.remove('show'); $('bonusQ').classList.remove('show');
+  $('bonusLive').classList.remove('show'); G.bonusGuess=null;
   $('revealNext').style.display='none';
   stopClip();
 
@@ -1152,7 +1154,21 @@ function renderGame(){
   renderTimeline();
 }
 
-function onPlay(){ sfx('tap'); playClip(G.current,G.mode); if(!G.listened){ G.listened=true; armSlots(); } }
+function onPlay(){ sfx('tap'); playClip(G.current,G.mode); if(!G.listened){ G.listened=true; armSlots(); prepBonusInput(); } }
+
+/* show the bonus-guess inputs (title/artist, +year for expert) — used local & online */
+function prepBonusInput(){
+  if(G.variant==='coop'){ $('bonusLive').classList.remove('show'); return; }
+  $('bonusTitle').value=''; $('bonusArtist').value='';
+  if($('bonusYear')){ $('bonusYear').value=''; $('bonusYear').style.display=G.variant==='expert'?'':'none'; }
+  const hd=$('bonusLive').querySelector('.bl-hd');
+  if(hd){
+    hd.textContent = G.variant==='pro' ? '✍️ רשמו שם שיר + אמן — חובה כדי לשמור את הקלף'
+      : G.variant==='expert' ? '✍️ רשמו שם שיר + אמן + שנה — חובה כדי לשמור את הקלף'
+      : '💡 נחשו שם שיר + אמן לפני הגילוי וקבלו ⭐';
+  }
+  $('bonusLive').classList.add('show');
+}
 
 let dragState=null;
 function enableVinylDrag(){
@@ -1225,7 +1241,12 @@ function armSlots(){
 }
 
 function handleNextTurn(){
-  if(MP.roomCode){ if(MP.isHost) mp_nextTurn(); else toast('ממתין למארח…'); return; }
+  if(MP.roomCode){
+    $('revealNext').style.display='none';
+    if(MP.isHost) mp_nextTurn();
+    else { if(MP.channel) MP.channel.send({type:'broadcast',event:'NEXT_TURN',payload:{}}); toast('עובר לתור הבא…'); }
+    return;
+  }
   nextTurn();
 }
 
@@ -1239,6 +1260,12 @@ function place(idx){
     G.challenge.slot=idx; G.challengePick=false;
     return resolveReveal();
   }
+  G.bonusGuess={
+    title:($('bonusTitle').value||'').trim(),
+    artist:($('bonusArtist').value||'').trim(),
+    year:($('bonusYear')?.value||'').trim()
+  };
+  $('bonusLive').classList.remove('show');
   G.placedSlot=idx;
   if(G.variant==='coop'){ return resolveReveal(); }
   const rivals=G.players.map((p,i)=>({p,i})).filter(x=>x.i!==G.turn && x.p.tokens>=1);
@@ -1320,40 +1347,42 @@ function resolveReveal(){
       $('revealNext').style.display='block'; return;
     }
 
+    // evaluate the typed bonus guess
+    const guess=G.bonusGuess||{title:'',artist:'',year:''};
+    const tOk=guess.title?mp_fuzzyMatch(guess.title,s.title||''):false;
+    const aOk=guess.artist?mp_fuzzyMatch(guess.artist,s.artist||''):false;
+    const yOk=guess.year?(parseInt(guess.year)===s.year):false;
+    const namedSong=tOk&&aOk;
+    const namedAll=G.variant==='expert'?(tOk&&aOk&&yOk):(tOk&&aOk);
+
     if(okA){
-      v.textContent=ch?'✓ '+p.name+' צדק — הערעור נכשל!':'✓ מיקום מדויק!';
-      v.className='verdict show ok'; confetti(); sfx('correct'); sfx('card-land');
       if(G.variant==='pro'||G.variant==='expert'){
-        G.pendingCard={card:s,slot:G.placedSlot,isChallenge:false};
-        const q=G.variant==='expert'
-          ?'⭐ ציינו נכון את שם האמן, שם השיר, ואת השנה?'
-          :'⭐ ציינו נכון את שם האמן ושם השיר?';
-        if($('bonusQText')) $('bonusQText').textContent=q;
+        if(namedAll){
+          activeTl.splice(G.placedSlot,0,s);
+          v.textContent='✓ מדויק — וגם זיהיתם!'; v.className='verdict show ok';
+          confetti(); sfx('correct'); sfx('card-land');
+        } else {
+          v.textContent='✗ המיקום נכון, אבל לא זיהיתם — הקלף נשרף'; v.className='verdict show bad'; sfx('wrong');
+        }
       } else {
         activeTl.splice(G.placedSlot,0,s);
-        if($('bonusQText')) $('bonusQText').textContent='⭐ זיהה את שם השיר והאמן לפני החשיפה?';
+        v.textContent=ch?'✓ '+p.name+' צדק — הערעור נכשל!':'✓ מיקום מדויק!';
+        v.className='verdict show ok'; confetti(); sfx('correct'); sfx('card-land');
+        if(namedSong&&p.tokens<G.maxTokens){ p.tokens++; sfx('token'); toast('⭐ אסימון — זיהיתם שיר ואמן!'); }
       }
-      $('bonusQ').classList.add('show');
     } else if(ch&&okC){
       const c=G.players[ch.pIdx];
+      c.timeline.push(s); c.timeline.sort((a,b)=>a.year-b.year);
       v.textContent='⚡ הערעור הצליח! הקלף עובר ל'+c.name;
       v.className='verdict show ok'; confetti(); sfx('correct');
-      if(G.variant==='pro'||G.variant==='expert'){
-        G.pendingCard={card:s,isChallenge:true,targetPlayer:ch.pIdx,targetName:c.name};
-        const q=G.variant==='expert'
-          ?`⭐ ${c.name}: ציינו שם האמן, שם השיר, ואת השנה?`
-          :`⭐ ${c.name}: ציינו שם האמן ושם השיר?`;
-        if($('bonusQText')) $('bonusQText').textContent=q;
-        $('bonusQ').classList.add('show');
-      } else {
-        c.timeline.push(s); c.timeline.sort((a,b)=>a.year-b.year);
-        $('revealNext').style.display='block';
-      }
     } else {
       v.textContent=ch?'✗ שניכם טעיתם — הקלף נשרף':'✗ לא הפעם…';
       v.className='verdict show bad'; sfx('wrong');
-      $('revealNext').style.display='block';
     }
+
+    const winner=G.players.find(pl=>pl.timeline.length>=G.target);
+    if(winner){ setTimeout(()=>showWin(winner),700); return; }
+    $('revealNext').style.display='block';
   },1200);
 }
 
@@ -1861,6 +1890,7 @@ async function mp_subscribe(){
     .on('broadcast',{event:'CHALLENGE_ACCEPT'},({payload})=>{ if(MP.isHost) mp_hostReceiveChallenge(payload); })
     .on('broadcast',{event:'CHALLENGE_PLACE'},({payload})=>{ if(MP.isHost) mp_hostReceiveChallengePlace(payload); })
     .on('broadcast',{event:'PEER_VOTE'},({payload})=>{ if(MP.isHost) mp_peerVote(payload.yes); })
+    .on('broadcast',{event:'NEXT_TURN'},()=>{ if(MP.isHost) mp_nextTurn(); })
     .on('broadcast',{event:'STATE_UPDATE'},({payload})=>{ if(!MP.isHost) mp_applyState(payload); })
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'game_rooms',filter:'code=eq.'+code},
       ({new:row})=>{ if(!MP.isHost) mp_applyState(row.state); });
@@ -2032,6 +2062,7 @@ function mp_applyState(state){
   $('revealNext').style.display='none';
   $('bonusLive').classList.remove('show');
   MP.songPlayed=false;
+  if(state.phase!=='placing') stopClip();
 
   const isMyTurn=MP.myIdx===G.turn;
   switch(state.phase){
@@ -2040,7 +2071,7 @@ function mp_applyState(state){
     case 'revealing':
       if(state.prev_phase==='bonus_vote'){
         $('revealOverlay').classList.add('show');
-        if(MP.isHost) $('revealNext').style.display='block';
+        setTimeout(()=>$('revealNext').style.display='block',300);
       } else mp_doReveal(state);
       break;
     case 'bonus_vote':   mp_doReveal(state); setTimeout(()=>mp_showPeerVote(state.bonus_pending),1500); break;
@@ -2151,7 +2182,7 @@ async function mp_playAndBroadcast(){
     payload:{video_id:G.current.youtube_id,start_offset:start,play_at:playAt,dur}});
   G.listened=true; MP.songPlayed=true;
   mp_renderMyTimeline(true);
-  $('bonusLive').classList.add('show');
+  prepBonusInput();
 }
 
 function mp_onPlaySong({video_id,start_offset,play_at,dur}){
@@ -2175,9 +2206,10 @@ async function mp_clientPlace(idx){
   sfx('place'); stopClip();
   const bonusTitle=($('bonusTitle').value||'').trim();
   const bonusArtist=($('bonusArtist').value||'').trim();
-  $('bonusTitle').value=''; $('bonusArtist').value='';
+  const bonusYear=($('bonusYear')?.value||'').trim();
+  $('bonusTitle').value=''; $('bonusArtist').value=''; if($('bonusYear')) $('bonusYear').value='';
   $('bonusLive').classList.remove('show');
-  const bonus={title:bonusTitle,artist:bonusArtist,by_id:MP.myId,by_name:MP.myName};
+  const bonus={title:bonusTitle,artist:bonusArtist,year:bonusYear,by_id:MP.myId,by_name:MP.myName};
 
   if(isChPick){
     if(idx===G.placedSlot){ toast('בחרו משבצת אחרת'); return; }
@@ -2243,7 +2275,7 @@ async function mp_hostDoReveal(placedSlot,challengeSlot,bonus){
   if(okA&&(variant==='pro'||variant==='expert')){
     const tOk=bonus?.title?mp_fuzzyMatch(bonus.title,s.title||''):false;
     const aOk=bonus?.artist?mp_fuzzyMatch(bonus.artist,s.artist||''):false;
-    const yOk=variant!=='expert'||(bonus?.year&&Math.abs(parseInt(bonus.year)-s.year)<=2);
+    const yOk=variant!=='expert'||(bonus?.year&&parseInt(bonus.year)===s.year);
     if(tOk&&aOk&&yOk){ curP.timeline.splice(placedSlot,0,{...s}); }
     // If not: card is discarded (not added)
   } else if(okA){ curP.timeline.splice(placedSlot,0,{...s}); }
@@ -2319,7 +2351,7 @@ function mp_doReveal(state){
     }
     if(navigator.vibrate) navigator.vibrate(r.okA||r.okC?[30,40,30]:[120]);
     if(r.bonus_auto) toast('⭐ בונוס אוטומטי — שיר ואמן!');
-    if(state.phase!=='bonus_vote'&&MP.isHost) setTimeout(()=>$('revealNext').style.display='block',800);
+    if(state.phase!=='bonus_vote') setTimeout(()=>$('revealNext').style.display='block',800);
   },1200);
 }
 
@@ -2366,6 +2398,7 @@ async function mp_peerVote(yes){
 async function mp_nextTurn(){
   if(!MP.isHost) return;
   const state=MP.gameState;
+  if(!state||state.phase==='placing'||state.phase==='finished') return;
   const players=G.players.map(p=>({...p,timeline:[...p.timeline]}));
   const winner=players.find(p=>p.timeline.length>=G.target);
   if(winner||!state.deck?.length){
