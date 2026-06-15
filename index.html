@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0A0D18">
-<title>ניגון בזמן · משחק ציר הזמן של המוזיקה החסידית</title>
+<title>חסידהיט סטאר · משחק ציר הזמן של המוזיקה החסידית</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
@@ -319,7 +319,7 @@ input[type=range].slider::-moz-range-thumb{width:22px;height:22px;border-radius:
       <circle cx="50" cy="50" r="17" fill="#D9B45A"/>
       <text x="50" y="56" text-anchor="middle" font-size="15" font-weight="900" fill="#241B05" font-family="Frank Ruhl Libre,serif">♪</text>
     </svg>
-    <h1 class="logo">ניגון בזמן</h1>
+    <h1 class="logo">חסידהיט סטאר</h1>
     <p class="tagline">מי מכיר הכי טוב את המוזיקה החסידית?<br>מקמו כל שיר על ציר הזמן — ונצחו.</p>
     <div class="home-actions">
       <button class="btn" onclick="go('scrSetup')">▶&nbsp; משחק מקומי</button>
@@ -341,7 +341,7 @@ input[type=range].slider::-moz-range-thumb{width:22px;height:22px;border-radius:
       <div><b style="color:var(--gold-bright)">2 · ממקמים.</b><br>הניחו את הקלף על ציר הזמן שלכם: לפני, אחרי, או בין הקלפים הקיימים. לא צריך לדעת שנה מדויקת — רק את הסדר הנכון.</div>
       <div><b style="color:var(--gold-bright)">3 · חושפים.</b><br>הקלף מתהפך. צדקתם? הוא נשאר אצלכם. טעיתם? הוא נשרף.</div>
       <div><b style="color:var(--gold-bright)">4 · בונוס ⭐</b><br>זיהיתם גם את שם השיר ואת האמן לפני החשיפה? קבלו אסימון. מקסימום 5 אסימונים לשחקן.<br><span class="muted" style="font-size:13px">3 אסימונים = קלף מתנה ישירות לציר | אסימון 1 = החלפת שיר</span></div>
-      <div><b style="color:var(--gold-bright)">5 · ערעורים ⭐</b><br>חושבים שיריב מיקם קלף לא נכון? צעקו "היטסטר!" לפני החשיפה, שלמו אסימון, והניחו אותו בפוזיציה שלכם. אם צדקתם — הקלף עובר אליכם!</div>
+      <div><b style="color:var(--gold-bright)">5 · ערעורים ⭐</b><br>חושבים שיריב מיקם קלף לא נכון? צעקו "חסידהיט!" לפני החשיפה, שלמו אסימון, והניחו אותו בפוזיציה שלכם. אם צדקתם — הקלף עובר אליכם!</div>
       <div><b style="color:var(--gold-bright)">6 · ניצחון.</b><br>הראשון שמגיע ליעד הקלפים שנקבע — מנצח!</div>
 
       <div style="height:1px;background:var(--line)"></div>
@@ -733,7 +733,7 @@ input[type=range].slider::-moz-range-thumb{width:22px;height:22px;border-radius:
 
 <script>
 /* =====================================================================
-   ניגון בזמן · v1
+   חסידהיט סטאר · v1
    ---------------------------------------------------------------------
    הרצה חד-פעמית ב-Supabase SQL Editor:
 
@@ -1444,6 +1444,7 @@ function confetti(){
 
 function showCoopWin(){
   stopClip();
+  $('revealOverlay').classList.remove('show');
   $('winName').textContent='הצוות ניצח! 🎉';
   $('winStats').textContent=`${G.coopTimeline.length} קלפים — נשארו ${G.coopTokens} אסימונים`;
   confetti(); go('scrWin');
@@ -1451,6 +1452,7 @@ function showCoopWin(){
 
 function showCoopLose(){
   stopClip();
+  $('revealOverlay').classList.remove('show');
   $('winName').textContent='אוי... הפסדתם';
   $('winStats').textContent=`הגעתם ל-${G.coopTimeline.length} קלפים מתוך ${G.target}`;
   go('scrWin');
@@ -1458,6 +1460,7 @@ function showCoopLose(){
 
 function showWin(w,byDeck){
   stopClip();
+  $('revealOverlay').classList.remove('show');
   sbLogSession({created_at:new Date().toISOString(), players_count:G.players.length,
     mode:G.mode, target:G.target, winner_name:w.name,
     total_placements:G.placed, correct_placements:G.correctPlaced});
