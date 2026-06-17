@@ -410,10 +410,31 @@ body.light .tcard .tt{color:#4A3010}
 /* ---------- home-hero: transparent wrapper, centred on mobile ---------- */
 .home-hero{display:flex;flex-direction:column;align-items:center;width:100%}
 
+/* ---------- game screen structural elements ---------- */
+.gm-topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 18px 0;flex-shrink:0;
+}
+.gm-logo-badge{display:none} /* hidden on mobile, shown on desktop */
+.gm-body{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.gm-sidebar{flex-shrink:0}
+.gm-center{flex:1;display:flex;flex-direction:column;min-height:0}
+.gm-right{flex-shrink:0}
+.gm-right-inner{padding:0 18px}
+.gm-q-label{display:none} /* only shown on desktop */
+
 /* ======================================================
    DESKTOP LAYOUT ≥ 960 px
    ====================================================== */
 @media (min-width:960px){
+
+  /* ── Body background: richer texture ── */
+  body{
+    background-image:
+      radial-gradient(ellipse 140% 60% at 50% -10%, rgba(200,149,42,.09), transparent 55%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(124,29,46,.07), transparent 50%);
+  }
+
 
   /* ── Home: two-column hero ── */
   #scrHome .wrap{
@@ -438,86 +459,213 @@ body.light .tcard .tt{color:#4A3010}
   .home-actions .btn{font-size:17px;padding:16px 22px}
   .home-actions .admin-link{margin-top:18px}
 
-  /* ── Generic screens: wider wrap ── */
+  /* ── Generic screens ── */
   .wrap{max-width:680px}
+  #scrAdmin .wrap{max-width:1100px}
 
-  /* ── Game screen: split-panel layout ── */
+  /* ─────────────────────────────────────────
+     GAME SCREEN: full 3-column grid layout
+     ───────────────────────────────────────── */
   #scrGame{
-    flex-direction:row;
+    display:grid;
+    grid-template-rows:56px 1fr 220px;
+    grid-template-columns:220px 1fr 270px;
+    grid-template-areas:
+      "topbar topbar topbar"
+      "sidebar center right"
+      "tl tl tl";
     height:100dvh;
-    overflow:visible;
+    overflow:hidden;
   }
-  #scrGame .wrap{
-    flex:0 0 360px;
-    max-width:360px;
-    height:100%;
+
+  /* ── Top bar ── */
+  .gm-topbar{
+    grid-area:topbar;
+    padding:0 24px;
+    height:56px;
+    background:var(--raised);
+    border-bottom:1px solid rgba(200,149,42,.20);
+    box-shadow:0 2px 12px rgba(0,0,0,.35);
+    z-index:10;
+  }
+  .gm-logo-badge{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:var(--disp);
+    font-weight:900;
+    font-size:22px;
+    color:var(--gold-bright);
+    letter-spacing:.04em;
+  }
+
+  /* ── Left sidebar: players ── */
+  .gm-body{
+    display:contents; /* children participate in parent grid */
+  }
+  .gm-sidebar{
+    grid-area:sidebar;
+    background:var(--bg2);
+    border-left:1px solid rgba(200,149,42,.16);
     overflow-y:auto;
-    padding-bottom:32px;
-    border-left:1px solid rgba(200,149,42,.12);
-  }
-  .tl-zone{
-    flex:1;
+    padding:20px 14px;
     display:flex;
     flex-direction:column;
-    border-top:none;
+    gap:10px;
+  }
+  .gm-center{
+    grid-area:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
     background:var(--bg);
+    padding:20px;
+  }
+  .gm-right{
+    grid-area:right;
+    background:var(--raised);
+    border-right:1px solid rgba(200,149,42,.16);
+    overflow-y:auto;
+    display:flex;
+    flex-direction:column;
+    padding:20px 18px;
+  }
+  .gm-right-inner{
+    padding:0;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .gm-q-label{
+    display:block;
+    font-family:var(--disp);
+    font-size:18px;
+    font-weight:700;
+    color:var(--gold-bright);
+    border-bottom:1px solid rgba(200,149,42,.20);
+    padding-bottom:10px;
+    margin-bottom:4px;
+  }
+
+  /* bonus-live always visible on desktop right panel */
+  .bonus-live{
+    display:block !important;
+    background:transparent;
+    border:none;
+    padding:0;
+    margin:0;
+  }
+  .bonus-live .bl-hd{
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:8px;
+  }
+  .bonus-live .row{flex-direction:column;gap:8px}
+  .bonus-live .row input{width:100%}
+
+  /* ── Timeline strip at bottom ── */
+  .tl-zone{
+    grid-area:tl;
+    display:flex;
+    flex-direction:column;
+    border-top:1px solid rgba(200,149,42,.18);
+    background:var(--bg2);
     overflow:hidden;
     padding:0;
   }
-  body.light .tl-zone{background:var(--bg)}
   .tl-head{
     flex-shrink:0;
-    padding:18px 28px 14px;
+    padding:10px 24px 8px;
     max-width:none;
     margin:0;
     border-bottom:1px solid rgba(200,149,42,.10);
-    background:inherit;
   }
   .timeline{
     flex:1;
-    flex-direction:column;
-    overflow-y:auto;
-    overflow-x:visible;
-    padding:14px 28px 24px;
+    display:flex;
+    flex-direction:row;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:10px 20px 14px;
     gap:10px;
-    align-items:stretch;
+    align-items:center;
     scrollbar-width:thin;
-    scrollbar-color:rgba(200,149,42,.25) transparent;
+    scrollbar-color:rgba(200,149,42,.22) transparent;
   }
-  .timeline::-webkit-scrollbar{display:block;width:5px}
-  .timeline::-webkit-scrollbar-thumb{background:rgba(200,149,42,.25);border-radius:3px}
+  .timeline::-webkit-scrollbar{display:block;height:5px}
+  .timeline::-webkit-scrollbar-thumb{background:rgba(200,149,42,.22);border-radius:3px}
 
-  /* Timeline cards: horizontal bar layout on desktop */
-  .tcard{
-    width:100%;
+  /* Timeline cards: slightly bigger on desktop bottom strip */
+  .tcard{width:96px;padding:10px 9px}
+  .tcard .yr{font-size:21px}
+  .slot{height:72px}
+
+  /* Players bar: vertical list in sidebar */
+  .players-bar{
+    flex-direction:column;
+    overflow-x:visible;
+    overflow-y:visible;
+    padding:0;
+    gap:10px;
+  }
+  .pchip{
     min-width:0;
     flex-direction:row;
     align-items:center;
-    gap:14px;
-    padding:12px 18px;
+    gap:10px;
+    padding:12px 14px;
     border-radius:12px;
   }
-  .tcard .yr{font-size:24px;min-width:56px}
-  .tcard .yr-g{white-space:nowrap;font-size:11px}
-  .tcard .tt{-webkit-line-clamp:1;text-align:right;flex:1;font-size:13px}
+  .pchip .pname{max-width:none;font-size:14px}
+  .pchip .cnt{font-size:16px}
+  .pchip-prog{margin-top:0}
 
-  /* Slots: full-width horizontal bars */
-  .slot{width:100%;height:44px;flex-shrink:0;border-radius:10px}
+  /* Stage in center panel */
+  .stage{
+    align-items:center;
+    gap:16px;
+    min-height:0;
+    padding:0;
+  }
+  .vinyl-wrap{width:min(220px,22vw)}
 
-  /* Vinyl: comfortable size, drag hint adjusted */
-  .vinyl-wrap{width:min(200px,28vw)}
-  .stage{min-height:0;padding:8px 0}
-  .vinyl-wrap.grabbable::after{content:'גררו לציר ←'}
+  /* Game top bar internal: override old .game-top */
+  .game-top{display:none} /* replaced by gm-topbar */
 
-  /* ── Admin: full-width ── */
-  #scrAdmin .wrap{max-width:1100px}
-
-  /* ── Overlay: slightly wider flip card ── */
+  /* Overlay */
   .flip-scene{width:min(340px,50vw)}
 
-  /* ── Emoji bar, toast ── */
-  .emoji-bar{bottom:80px;left:24px}
-  .toast{bottom:32px}
+  /* Emoji bar */
+  .emoji-bar{bottom:240px;left:24px}
+  .toast{bottom:240px}
+
+  /* ── Rich panel borders: double-rule ornament ── */
+  .gm-sidebar::before,
+  .gm-right::before{
+    content:'◆';
+    display:block;
+    text-align:center;
+    color:rgba(200,149,42,.25);
+    font-size:10px;
+    letter-spacing:8px;
+    margin-bottom:14px;
+    flex-shrink:0;
+  }
+
+  /* ── Players sidebar: "stage lights" accent strip ── */
+  .gm-sidebar::after{
+    content:'';
+    display:block;
+    flex:1;
+    min-height:20px;
+  }
+
+  body.light .gm-topbar{background:var(--raised);border-bottom-color:rgba(124,80,20,.20)}
+  body.light .gm-sidebar{background:var(--bg2)}
+  body.light .gm-right{background:var(--raised);border-right-color:rgba(124,80,20,.16)}
+  body.light .tl-zone{background:var(--bg2)}
 }
 </style>
 </head>
@@ -737,34 +885,53 @@ body.light .tcard .tt{color:#4A3010}
 
 <!-- ============ GAME ============ -->
 <div class="screen" id="scrGame">
-  <div class="wrap">
-    <div class="game-top">
-      <button class="gtop-exit" onclick="exitGame()">← יציאה</button>
-      <span class="gtop-round" id="roundLabel">סבב 1</span>
+  <!-- Full-width top bar -->
+  <div class="gm-topbar">
+    <button class="gtop-exit" onclick="exitGame()">← יציאה</button>
+    <div class="gm-logo-badge">♪ חסידהיט</div>
+    <span class="gtop-round" id="roundLabel">סבב 1</span>
+  </div>
+
+  <!-- Main body -->
+  <div class="gm-body">
+    <!-- Left sidebar: players -->
+    <div class="gm-sidebar">
+      <div class="players-bar" id="playersBar"></div>
     </div>
-    <div class="players-bar" id="playersBar"></div>
-    <div class="stage">
-      <div class="turn-label" id="turnLabel"></div>
-      <div id="pressureTimer" style="display:none;font-size:26px;font-weight:900;font-family:var(--disp);letter-spacing:.02em"></div>
-      <div class="vinyl-wrap">
-        <div class="progress-ring" id="progressRing"></div>
-        <div class="vinyl" id="vinyl">
-          <div class="vinyl-label">♪</div>
+
+    <!-- Center: vinyl stage -->
+    <div class="gm-center">
+      <div class="stage">
+        <div class="turn-label" id="turnLabel"></div>
+        <div class="vinyl-wrap">
+          <div class="progress-ring" id="progressRing"></div>
+          <div class="vinyl" id="vinyl">
+            <div class="vinyl-label">♪</div>
+          </div>
+          <div class="vinyl-q" id="vinylQ">?</div>
         </div>
-        <div class="vinyl-q" id="vinylQ">?</div>
+        <div class="eq" id="eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="play-controls" id="playControls"></div>
       </div>
-      <div class="eq" id="eq"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-      <div class="play-controls" id="playControls"></div>
-      <div class="bonus-live" id="bonusLive">
-        <div class="bl-hd">💡 ניחוש בונוס — לפני הגילוי</div>
-        <div class="row">
-          <input id="bonusTitle" placeholder="שם השיר" style="flex:1">
-          <input id="bonusArtist" placeholder="אמן" style="flex:1">
-          <input id="bonusYear" placeholder="שנה" inputmode="numeric" style="flex:1;display:none">
+    </div>
+
+    <!-- Right: question + bonus input -->
+    <div class="gm-right">
+      <div class="gm-right-inner">
+        <div class="gm-q-label">ניחוש בונוס</div>
+        <div class="bonus-live" id="bonusLive">
+          <div class="bl-hd">💡 לפני הגילוי</div>
+          <div class="row">
+            <input id="bonusTitle" placeholder="שם השיר" style="flex:1">
+            <input id="bonusArtist" placeholder="אמן" style="flex:1">
+            <input id="bonusYear" placeholder="שנה" inputmode="numeric" style="flex:1;display:none">
+          </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Timeline -->
   <div class="tl-zone">
     <div class="tl-head">
       <span class="eyebrow">ציר הזמן שלי</span>
