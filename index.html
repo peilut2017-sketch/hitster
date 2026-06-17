@@ -409,6 +409,7 @@ body.light .tcard .tt{color:#4A3010}
 
 /* ---------- home-hero: transparent wrapper, centred on mobile ---------- */
 .home-hero{display:flex;flex-direction:column;align-items:center;width:100%}
+.home-eyebrow-label{display:none}
 
 /* ---------- game screen structural elements ---------- */
 .gm-topbar{
@@ -666,6 +667,127 @@ body.light .tcard .tt{color:#4A3010}
   body.light .gm-sidebar{background:var(--bg2)}
   body.light .gm-right{background:var(--raised);border-right-color:rgba(124,80,20,.16)}
   body.light .tl-zone{background:var(--bg2)}
+
+  /* ── Home hero: eyebrow label + ♪ watermark ── */
+  .home-eyebrow-label{
+    display:block;
+    font-size:11px;
+    letter-spacing:.22em;
+    color:var(--gold-dim);
+    font-weight:700;
+    margin-bottom:4px;
+  }
+  .home-hero{position:relative;overflow:visible}
+  .home-hero::after{
+    content:'♪';
+    position:absolute;
+    font-family:var(--disp);
+    font-weight:900;
+    font-size:340px;
+    line-height:1;
+    color:rgba(200,149,42,.045);
+    right:-60px;
+    top:50%;
+    transform:translateY(-50%);
+    pointer-events:none;
+    z-index:0;
+    user-select:none;
+  }
+  .home-hero>*{position:relative;z-index:1}
+
+  /* ── Topbar: double gold shadow line ── */
+  .gm-topbar{
+    border-bottom:none;
+    box-shadow:
+      0 1px 0 rgba(200,149,42,.45),
+      0 3px 0 rgba(200,149,42,.10),
+      0 6px 20px rgba(0,0,0,.40);
+  }
+  .gm-logo-badge{
+    text-shadow:0 0 30px rgba(200,149,42,.25);
+    letter-spacing:.06em;
+  }
+
+  /* ── Sidebar player chips: grid layout with avatar initial ── */
+  .pchip{
+    display:grid;
+    grid-template-columns:40px 1fr;
+    grid-template-rows:auto auto;
+    column-gap:10px;
+    row-gap:5px;
+    align-items:center;
+    flex-direction:unset;
+    gap:unset;
+  }
+  .pchip::before{
+    content:attr(data-initial);
+    grid-row:1 / 3;
+    grid-column:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:var(--bg);
+    border:1.5px solid rgba(200,149,42,.30);
+    font-family:var(--disp);
+    font-weight:900;
+    font-size:20px;
+    color:var(--gold-dim);
+    flex-shrink:0;
+    align-self:center;
+  }
+  .pchip.turn::before{
+    background:rgba(124,29,46,.30);
+    border-color:var(--gold);
+    color:var(--gold-bright);
+    box-shadow:0 0 14px rgba(124,29,46,.35);
+  }
+  .pchip-row{grid-row:1;grid-column:2;display:flex;align-items:center;gap:6px;min-width:0}
+  .pchip-prog{grid-row:2;grid-column:2;margin-top:0;width:100%}
+  .pchip .pname{max-width:none;font-size:14px;flex:1}
+  .pchip .cnt{font-size:15px}
+
+  /* ── Stage: spotlight glow behind vinyl ── */
+  .gm-center{position:relative}
+  .gm-center::before{
+    content:'';
+    position:absolute;
+    width:min(320px,30vw);
+    aspect-ratio:1;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(200,149,42,.07) 0%,transparent 70%);
+    pointer-events:none;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-55%);
+  }
+  .stage{position:relative;z-index:1}
+
+  /* ── Right panel heading ── */
+  .gm-q-label{
+    font-size:11px;
+    letter-spacing:.20em;
+    color:var(--gold);
+    font-weight:700;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .gm-q-label::before{content:'◆';font-size:8px;opacity:.7}
+  .bonus-live .bl-hd{color:var(--muted);font-size:12px;letter-spacing:.05em;margin-bottom:10px}
+
+  /* ── Timeline bottom strip: wine accent on RTL start ── */
+  .tcard{border-right:3px solid rgba(124,29,46,.50)}
+
+  /* ── Desktop turn label ── */
+  .gm-center .turn-label{font-size:16px;font-weight:600;color:var(--ink);margin-bottom:4px}
+
+  /* ── Vinyl slightly larger in center panel ── */
+  .vinyl-wrap{width:min(230px,24vw)}
 }
 </style>
 </head>
@@ -676,6 +798,7 @@ body.light .tcard .tt{color:#4A3010}
 <div class="screen active" id="scrHome">
   <div class="wrap">
     <div class="home-hero">
+      <span class="home-eyebrow-label">♪ &nbsp; משחק מוזיקה חסידי</span>
       <img src="logo.png" alt="חסידהיט סטאר" class="logo-img">
       <p class="tagline">מי מכיר הכי טוב את המוזיקה החסידית?<br>מקמו כל שיר על ציר הזמן — ונצחו.</p>
     </div>
@@ -1542,7 +1665,7 @@ function renderGame(){
 
   if(G.variant==='coop'){
     $('playersBar').innerHTML=`
-      <div class="pchip turn">
+      <div class="pchip turn" data-initial="צ">
         <div class="pchip-row">
           <span class="pname">הצוות</span>
           <span class="cnt">${G.coopTimeline.length}<span class="cnt-of">/${G.target}</span></span>
@@ -1558,7 +1681,7 @@ function renderGame(){
   }
 
   $('playersBar').innerHTML = G.players.map((pl,i)=>`
-    <div class="pchip ${i===G.turn?'turn':''}">
+    <div class="pchip ${i===G.turn?'turn':''}" data-initial="${[...(pl.name||'?')][0]}">
       <div class="pchip-row">
         <span class="pname">${pl.name}</span>
         <span class="cnt">${pl.timeline.length}<span class="cnt-of">/${G.target}</span></span>
@@ -2588,7 +2711,7 @@ function mp_renderGame(isMyTurn){
 
   if(G.variant==='coop'){
     $('playersBar').innerHTML=`
-      <div class="pchip turn">
+      <div class="pchip turn" data-initial="צ">
         <div class="pchip-row">
           <span class="pname">הצוות</span>
           <span class="cnt">${G.coopTimeline.length}<span class="cnt-of">/${G.target}</span></span>
@@ -2608,7 +2731,7 @@ function mp_renderGame(isMyTurn){
   }
 
   $('playersBar').innerHTML=G.players.map((pl,i)=>`
-    <div class="pchip ${i===G.turn?'turn':''}">
+    <div class="pchip ${i===G.turn?'turn':''}" data-initial="${[...(pl.name||'?')][0]}">
       <div class="pchip-row">
         <span class="pname">${pl.name}${pl.id===MP.myId?'★':''}</span>
         <span class="cnt">${pl.timeline.length}<span class="cnt-of">/${G.target}</span></span>
