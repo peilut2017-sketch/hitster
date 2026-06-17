@@ -1,0 +1,13 @@
+{
+  "name": "חסידהיט סטאר",
+  "short_name": "חסידהיט",
+  "description": "משחק ציר הזמן של המוזיקה החסידית",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0D18",
+  "theme_color": "#D9B45A",
+  "icons": [{"src":"logo.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}],
+  "lang": "he",
+  "dir": "rtl"
+}
