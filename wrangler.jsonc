@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "hitster",
+  "name": "hasidhitstar",
   "compatibility_date": "2026-06-14",
   "observability": {
     "enabled": true
