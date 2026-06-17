@@ -406,6 +406,119 @@ body.light .tcard{background:#D8C898;border-color:#B8A870}
 body.light .tcard .yr{color:#2A1800}
 body.light .tcard .yr-g{color:#6A4E20}
 body.light .tcard .tt{color:#4A3010}
+
+/* ---------- home-hero: transparent wrapper, centred on mobile ---------- */
+.home-hero{display:flex;flex-direction:column;align-items:center;width:100%}
+
+/* ======================================================
+   DESKTOP LAYOUT ≥ 960 px
+   ====================================================== */
+@media (min-width:960px){
+
+  /* ── Home: two-column hero ── */
+  #scrHome .wrap{
+    flex-direction:row;
+    gap:80px;
+    align-items:center;
+    justify-content:center;
+    text-align:right;
+    max-width:920px;
+    padding-top:0;
+    padding-bottom:0;
+  }
+  .home-hero{
+    flex:0 0 auto;
+    align-items:flex-start;
+    gap:16px;
+    max-width:340px;
+  }
+  .logo-img{width:200px;margin-bottom:0}
+  .tagline{font-size:17px;line-height:1.85;margin:0}
+  .home-actions{flex:1;max-width:290px;gap:13px}
+  .home-actions .btn{font-size:17px;padding:16px 22px}
+  .home-actions .admin-link{margin-top:18px}
+
+  /* ── Generic screens: wider wrap ── */
+  .wrap{max-width:680px}
+
+  /* ── Game screen: split-panel layout ── */
+  #scrGame{
+    flex-direction:row;
+    height:100dvh;
+    overflow:visible;
+  }
+  #scrGame .wrap{
+    flex:0 0 360px;
+    max-width:360px;
+    height:100%;
+    overflow-y:auto;
+    padding-bottom:32px;
+    border-left:1px solid rgba(200,149,42,.12);
+  }
+  .tl-zone{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    border-top:none;
+    background:var(--bg);
+    overflow:hidden;
+    padding:0;
+  }
+  body.light .tl-zone{background:var(--bg)}
+  .tl-head{
+    flex-shrink:0;
+    padding:18px 28px 14px;
+    max-width:none;
+    margin:0;
+    border-bottom:1px solid rgba(200,149,42,.10);
+    background:inherit;
+  }
+  .timeline{
+    flex:1;
+    flex-direction:column;
+    overflow-y:auto;
+    overflow-x:visible;
+    padding:14px 28px 24px;
+    gap:10px;
+    align-items:stretch;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(200,149,42,.25) transparent;
+  }
+  .timeline::-webkit-scrollbar{display:block;width:5px}
+  .timeline::-webkit-scrollbar-thumb{background:rgba(200,149,42,.25);border-radius:3px}
+
+  /* Timeline cards: horizontal bar layout on desktop */
+  .tcard{
+    width:100%;
+    min-width:0;
+    flex-direction:row;
+    align-items:center;
+    gap:14px;
+    padding:12px 18px;
+    border-radius:12px;
+  }
+  .tcard .yr{font-size:24px;min-width:56px}
+  .tcard .yr-g{white-space:nowrap;font-size:11px}
+  .tcard .tt{-webkit-line-clamp:1;text-align:right;flex:1;font-size:13px}
+
+  /* Slots: full-width horizontal bars */
+  .slot{width:100%;height:44px;flex-shrink:0;border-radius:10px}
+
+  /* Vinyl: comfortable size, drag hint adjusted */
+  .vinyl-wrap{width:min(200px,28vw)}
+  .stage{min-height:0;padding:8px 0}
+  .vinyl-wrap.grabbable::after{content:'גררו לציר ←'}
+
+  /* ── Admin: full-width ── */
+  #scrAdmin .wrap{max-width:1100px}
+
+  /* ── Overlay: slightly wider flip card ── */
+  .flip-scene{width:min(340px,50vw)}
+
+  /* ── Emoji bar, toast ── */
+  .emoji-bar{bottom:80px;left:24px}
+  .toast{bottom:32px}
+}
 </style>
 </head>
 <body>
@@ -414,15 +527,17 @@ body.light .tcard .tt{color:#4A3010}
 <!-- ============ HOME ============ -->
 <div class="screen active" id="scrHome">
   <div class="wrap">
-    <img src="logo.png" alt="חסידהיט סטאר" class="logo-img">
-    <p class="tagline">מי מכיר הכי טוב את המוזיקה החסידית?<br>מקמו כל שיר על ציר הזמן — ונצחו.</p>
+    <div class="home-hero">
+      <img src="logo.png" alt="חסידהיט סטאר" class="logo-img">
+      <p class="tagline">מי מכיר הכי טוב את המוזיקה החסידית?<br>מקמו כל שיר על ציר הזמן — ונצחו.</p>
+    </div>
     <div class="home-actions">
       <button class="btn gold" onclick="go('scrSetup')">▶&nbsp; משחק מקומי</button>
       <button class="btn ghost" onclick="go('scrRoomMenu')">🌐 משחק ברשת</button>
       <button class="btn ghost" onclick="showLeaderboard()">🏆 לוח מנצחים</button>
       <button class="btn ghost" onclick="go('scrHow')">איך משחקים?</button>
+      <button class="admin-link" onclick="adminGate()">ניהול קטלוג</button>
     </div>
-    <button class="admin-link" onclick="adminGate()">ניהול קטלוג</button>
   </div>
 </div>
 
